@@ -1,0 +1,2425 @@
+#define NOMINMAX
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <algorithm>
+#include "pch.h"
+#include "RegExpCalc.h"
+#include "Resource.h"
+#include "RegExpEngine.h"
+
+#define BUFSIZE         4096
+#define ARGSIZE         128
+#define MAXSTRLEN      1024
+
+//---------------------------------------------------------------------------
+//https://bbs.archlinux.org/viewtopic.php?id=31087
+//scanf
+//int main() {
+//  char* m = (char*) malloc(sizeof(int)*2 + sizeof(char*)); /* prepare enough memory*/
+//  void* bm = m; /* copies the pointer */
+//  char* string = "I am a string!!"; /* an example string */
+//
+//  (*(int*)m) = 10; /*puts the first value */
+//  m += sizeof(int); /* move forward the pointer to the next element */
+//
+//  (*(char**)m) = string; /* puts the next value */
+//  m += sizeof(char*); /* move forward again*/
+//
+//  (*(int*)m) = 20; /* puts the third element */
+//  m += sizeof(int); /* unneeded, but here for clarity. */
+//
+//  vprintf("%d %s %d\n", bm); /* the deep magic starts here...*/
+//  free(bm);
+//}
+//---------------------------------------------------------------------------
+
+//sscanf test utility function 
+int ssctst (char *dst, const char *sfmt, const char *str)
+{
+ char c = '\0';
+ char cc = '\0';
+ int ii = 0;
+ int n = 0;
+ int pfsize = 0;
+ bool percent, open;
+ enum ftypes
+ {
+  tNone, tChar, tShort, tInt, tLong, ti64, tFloat, tDouble, tExt, tString
+ } fmt;
+ void *arglist[ARGSIZE];
+ char typelist[ARGSIZE];
+ char fmtlist[ARGSIZE];
+ memset(arglist, 0, sizeof(arglist));
+ memset(typelist, 0, sizeof(typelist));
+ memset(fmtlist, 0, sizeof(typelist));
+ do
+  {
+   open = false;
+   percent = false;
+   fmt = tNone;
+   do
+	{
+	 cc = c;
+	 c = sfmt[ii++];
+	 if (open)
+	  {
+	   if ((c == ']'))
+		{
+		 fmt = tString;
+		 c = 's';
+		 open = false;
+		 break;
+		}
+	   else continue;
+	  }
+	 if (percent)
+	  {
+	   if (c == '%')
+		{
+		 percent = false;
+		 continue;
+		}
+	   else
+	   if (c == '*')
+		{
+		 fmt = tNone;
+		 percent = false;
+		 continue;
+		}
+	   else
+	   if ((c == 'f') || (c == 'e') || (c == 'E') || (c == 'g') || (c == 'G'))
+		{
+		 fmt = tFloat;
+		 if (cc == 'l') fmt = tDouble;
+		 else
+		 if (cc == 'L') fmt = tExt;
+		 break;
+		}
+	   else
+	   if ((c == 'd') || (c == 'i') || (c == 'u') ||
+	       (c == 'x') || (c == 'X') || (c == 'o'))
+		{
+		 fmt = tInt;
+		 if (cc == 'L') fmt = ti64;
+		 else 
+                 if (cc == 'l')  fmt = tLong;
+		 else 
+                 if (cc == 'h')  fmt = tShort;
+		 break;
+		}
+	   else
+	   if ((c == 'D') || (c == 'I') || (c == 'U') || (c == 'O'))
+		{
+		 fmt = tLong;
+		 c = tolower(c);
+		 break;
+		}
+	   else
+	   if (c == 'c')
+		{
+		 //fmt = tChar;
+		 fmt = tString;
+		 break;
+		}
+	   else
+	   if (c == 's')
+		{
+		 fmt = tString;
+		 break;
+		}
+	   else
+	   if (c == '[')
+		{
+		 open = true;
+		 continue;
+		}
+	  }
+	 else
+	 if (c == '%')
+	  {
+	   percent = true;
+	   continue;
+	  }
+	}
+   while (c);
+   if (c && percent && fmt)
+   {
+	   typelist[n] = fmt;
+	   fmtlist[n] = c;
+	   switch (fmt)
+	   {
+	   case tChar:
+		   arglist[n] = (void*)malloc(sizeof(char));
+		   *(char*)arglist[n] = '\0';
+		   pfsize += sizeof(char);
+		   break;
+	   case tShort:
+		   arglist[n] = (void*)malloc(sizeof(short));
+		   *(short*)arglist[n] = 0;
+		   pfsize += sizeof(short);
+		   break;
+	   case tInt:
+		   arglist[n] = (void*)malloc(sizeof(int));
+		   *(int*)arglist[n] = 0;
+		   pfsize += sizeof(int);
+		   break;
+	   case tLong:
+		   arglist[n] = (void*)malloc(sizeof(long));
+		   *(long*)arglist[n] = 0;
+		   pfsize += sizeof(long);
+		   break;
+	   case ti64:
+		   arglist[n] = (void*)malloc(sizeof(__int64));
+		   *(__int64*)arglist[n] = 0;
+		   pfsize += sizeof(__int64);
+		   break;
+	   case tFloat:
+		   arglist[n] = (void*)malloc(sizeof(float));
+		   *(float*)arglist[n] = 0.0;
+		   pfsize += sizeof(float);
+		   break;
+	   case tDouble:
+		   arglist[n] = (void*)malloc(sizeof(double));
+		   *(double*)arglist[n] = 0.0;
+		   pfsize += sizeof(double);
+		   break;
+	   case tExt:
+		   arglist[n] = (void*)malloc(sizeof(long double));
+		   *(long double*)arglist[n] = 0.0;
+		   pfsize += sizeof(long double);
+		   break;
+	   case tString:
+		   arglist[n] = (void*)malloc(sizeof(char*));
+		   *(char**)arglist[n] = (char*)malloc(BUFSIZE);
+		   memset(*(char**)arglist[n], 0, BUFSIZE);
+		   pfsize += sizeof(char*);
+		   break;
+	   }
+	   n++;
+      }
+    } while (c && (n < BUFSIZE));
+
+    arglist[n] = (void*)malloc(sizeof(long));
+
+#ifdef _LLM_CODE_
+    // --- FIX START ---
+   
+    int nn = 0;
+    int offset = 0;
+    for (int i = 0; i < n; ++i)
+    {
+        char fmtstr[16] = {0};
+        fmtstr[0] = '%';
+        int fmtlen = 1;
+        // Add length modifiers if needed
+        switch (typelist[i])
+        {
+            case tShort: fmtstr[fmtlen++] = 'h'; break;
+            case tLong:  fmtstr[fmtlen++] = 'l'; break;
+            case ti64:   fmtstr[fmtlen++] = 'l'; fmtstr[fmtlen++] = 'l'; break;
+            case tDouble:fmtstr[fmtlen++] = 'l'; break;
+            case tExt:   fmtstr[fmtlen++] = 'L'; break;
+        }
+        fmtstr[fmtlen++] = fmtlist[i];
+        fmtstr[fmtlen] = '\0';
+
+        char token[BUFSIZE] = {0};
+        int t = 0;
+        while (str[offset] == ' ' || str[offset] == ',') ++offset; // skip delimiters
+        while (str[offset] && str[offset] != ',') token[t++] = str[offset++];
+        token[t] = '\0';
+
+        switch (typelist[i])
+        {
+            case tChar:
+                if (sscanf_s(token, fmtstr, (char*)arglist[i]) == 1) ++nn;
+                break;
+            case tShort:
+                if (sscanf_s(token, fmtstr, (short*)arglist[i]) == 1) ++nn;
+                break;
+            case tInt:
+                if (sscanf_s(token, fmtstr, (int*)arglist[i]) == 1) ++nn;
+                break;
+            case tLong:
+                if (sscanf_s(token, fmtstr, (long*)arglist[i]) == 1) ++nn;
+                break;
+            case ti64:
+                if (sscanf_s(token, fmtstr, (__int64*)arglist[i]) == 1) ++nn;
+                break;
+            case tFloat:
+                if (sscanf_s(token, fmtstr, (float*)arglist[i]) == 1) ++nn;
+                break;
+            case tDouble:
+                if (sscanf_s(token, fmtstr, (double*)arglist[i]) == 1) ++nn;
+                break;
+            case tExt:
+                if (sscanf_s(token, fmtstr, (long double*)arglist[i]) == 1) ++nn;
+                break;
+            case tString:
+                if (sscanf_s(token, fmtstr, *(char**)arglist[i], BUFSIZE) == 1) ++nn;
+                break;
+        }
+    }
+    // --- FIX END ---
+#else //_LLM_CODE_
+    int nn = vsscanf(str, sfmt, (char*)arglist);
+#endif //_LLM_CODE_
+    char* fdest = dst;
+    for (int i = 0; (i < n) && arglist[i]; i++)
+    {
+        switch (typelist[i])
+        {
+        case tChar:
+        {
+            char ci = *(char*)arglist[i];
+            char fmt[] = { "%c, \0" };
+            fdest += sprintf_s(fdest, BUFSIZE - (fdest - dst), fmt, ci);
+        }
+        break;
+        case tShort:
+        {
+            short si = *(short*)arglist[i];
+            char fmt[] = { "%hd, \0" };
+            fmt[2] = fmtlist[i];
+            fdest += sprintf_s(fdest, BUFSIZE - (fdest - dst), fmt, si);
+        }
+        break;
+        case tInt:
+        {
+            int ii = *(int*)arglist[i];
+            char fmt[] = { "%d, \0" };
+            fmt[1] = fmtlist[i];
+            fdest += sprintf_s(fdest, BUFSIZE - (fdest - dst), fmt, ii);
+        }
+        break;
+        case tLong:
+        {
+            long li = *(long*)arglist[i];
+            char fmt[] = { "%ld, \0" };
+            fmt[2] = fmtlist[i];
+            fdest += sprintf_s(fdest, BUFSIZE - (fdest - dst), fmt, li);
+        }
+        break;
+        case ti64:
+        {
+            __int64 Li = *(__int64*)arglist[i];
+            char fmt[] = { "%Ld, \0" };
+            fmt[2] = fmtlist[i];
+            fdest += sprintf_s(fdest, BUFSIZE - (fdest - dst), fmt, Li);
+        }
+        break;
+        case tFloat:
+        {
+            float ff = *(float*)arglist[i];
+            char fmt[] = { "%f, \0" };
+            fmt[1] = fmtlist[i];
+            fdest += sprintf_s(fdest, BUFSIZE - (fdest - dst), fmt, ff);
+        }
+        break;
+        case tDouble:
+        {
+            double df = *(double*)arglist[i];
+            char fmt[] = { "%lf, \0" };
+            fmt[2] = fmtlist[i];
+            fdest += sprintf_s(fdest, BUFSIZE - (fdest - dst), fmt, df);
+        }
+        break;
+        case tExt:
+        {
+            long double lf = *(long double*)arglist[i];
+            char fmt[] = { "%Lf, \0" };
+            fmt[2] = fmtlist[i];
+            fdest += sprintf_s(fdest, BUFSIZE - (fdest - dst), fmt, lf);
+        }
+        break;
+        case tString:
+        {
+            char* ss = (char*)arglist[i];
+            char fmt[] = { "%s, \0" };
+            fdest += sprintf_s(fdest, BUFSIZE - (fdest - dst), fmt, ss);
+        }
+        break;
+        }
+    }
+    if (fdest > dst + 2) fdest[-2] = '\0'; //supress last ", "
+
+    for (int i = 0; (i < ARGSIZE) && arglist[i]; i++)
+    {
+        if (typelist[i] == tString)
+        {
+            char* s = (char*)arglist[i];
+            free(s);
+            free(arglist[i]);
+        }
+        else free(arglist[i]);
+    }
+    return nn;
+}
+//---------------------------------------------------------------------------
+//sprintf test utility function
+
+void sprtst(char* dst, char* sfmt, char* str)
+{
+    char pfmt[BUFSIZE];
+    char pstr[BUFSIZE];
+    enum ftypes {
+        tNone, tShort, tInt, tLong, tInt64,
+        tFloat, tDouble, tLongDouble, tString, tPtr
+    } fmt;
+    char c = '\0', cc = '\0';
+    int i;
+    bool flag;
+
+    char* pdst = dst; // Новый указатель для отслеживания позиции в dst
+
+    do
+    {
+        i = 0; flag = false; fmt = tNone;
+        do
+        {
+            cc = c;
+            c = pfmt[i++] = *sfmt++;
+            pfmt[i] = '\0';
+            if (flag)
+            {
+                if (c == '%') { flag = false; continue; }
+                else
+                if ((c == 'f') || (c == 'e') || (c == 'E') ||
+                    (c == 'g') || (c == 'G'))
+                {
+                    if (cc == 'l') fmt = tDouble;
+                    else
+                    if (cc == 'L') fmt = tLongDouble;
+                    else fmt = tFloat;
+                    break;
+                }
+                else
+                if ((c == 'd') || (c == 'i') || (c == 'u') ||
+                    (c == 'x') || (c == 'X') || (c == 'o') || (c == 'c'))
+                {
+                    if (cc == 'l') fmt = tLong;
+                    else
+                    if (cc == 'h') fmt = tShort;
+                    else
+                    if (cc == 'L') fmt = tInt64;
+                    else fmt = tInt;
+                    break;
+                }
+                else
+                if ((c == 'n') || (c == 'p')) { fmt = tPtr; break; }
+                else
+                if (c == 's') { fmt = tString; break; }
+                else continue;
+            }
+            else
+            if (c == '%') { flag = true; continue; }
+        } while (c && (i < BUFSIZE));
+        if (!c) sfmt--; //poit to '\0'
+        i = 0; flag = false;
+        do
+        {
+            c = *str++;
+            if (!flag && (c == '"')) { flag = true; continue; }
+            if (flag && (c == '"')) { flag = false; continue; }
+            if (!flag && ((c == ',') || (c == '\0'))) //add asterix
+            {
+                i = pstr[i] = '\0';
+                switch (fmt)
+                {
+                case tNone:
+                    pdst += sprintf_s(pdst, BUFSIZE - (pdst - dst), pfmt);
+                    break;
+                case tPtr:
+                    strcpy_s(pdst, BUFSIZE - (pdst - dst), pfmt);
+                    pdst += strlen(pfmt);
+                    break;
+                case tInt:
+                {
+                    int l = atol(pstr);
+                    pdst += sprintf_s(pdst, BUFSIZE - (pdst - dst), pfmt, l);
+                }
+                break;
+                case tLong:
+                {
+                    long l = atol(pstr);
+                    pdst += sprintf_s(pdst, BUFSIZE - (pdst - dst), pfmt, l);
+                }
+                break;
+                case tInt64:
+                {
+                    __int64 l = _atoi64(pstr);
+                    pdst += sprintf_s(pdst, BUFSIZE - (pdst - dst), pfmt, l);
+                }
+                break;
+                case tShort:
+                {
+                    short l = (short)atol(pstr);
+                    pdst += sprintf_s(pdst, BUFSIZE - (pdst - dst), pfmt, l);
+                }
+                break;
+                case tFloat:
+                {
+                    float d = (float)atof(pstr);
+                    pdst += sprintf_s(pdst, BUFSIZE - (pdst - dst), pfmt, d);
+                }
+                break;
+                case tDouble:
+                {
+                    double d = (double)atof(pstr);
+                    pdst += sprintf_s(pdst, BUFSIZE - (pdst - dst), pfmt, d);
+                }
+                break;
+                case tLongDouble:
+                {
+                    long double d = (long double)atof(pstr);
+                    pdst += sprintf_s(pdst, BUFSIZE - (pdst - dst), pfmt, d);
+                }
+                break;
+                case tString:
+                    pdst += sprintf_s(pdst, BUFSIZE - (pdst - dst), pfmt, pstr);
+                    break;
+                }
+                break;
+            }
+            else pstr[i++] = c;
+        } while (c && (i < BUFSIZE));
+    } while (*sfmt && (i < BUFSIZE));
+}
+
+//---------------------------------------------------------------------------
+const char* const ttls[] =
+{ "Res:", "&:", "\\0:", "\\1:", "\\2:", "\\3:",
+ "\\4:", "\\5:", "\\6:", "\\7:", "\\8:", "\\9:",
+ "\\A:", "\\B:", "\\C:", "\\D:", "\\E:", "\\F:" };
+
+const char* const rrpls[] =
+{ "\0", "&", "\\0", "\\1", "\\2", "\\3",
+ "\\4", "\\5", "\\6", "\\7", "\\8", "\\9",
+ "\\A", "\\B", "\\C", "\\D", "\\E", "\\F" };
+
+#define _RLINES_ sizeof(ttls)/sizeof(ttls[0])
+
+//---------------------------------------------------------------------------
+
+
+// ====== Утилита для подсчета строк в результате ======
+int CountLines(const std::string& s) {
+    return static_cast<int>(std::count(s.begin(), s.end(), '\n')) + 1;
+}
+
+// ========== Класс ===============
+
+// Window procedure for the main window
+LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    static RegExpCalc* pCalc = nullptr;
+
+    switch (uMsg)
+    {
+    case WM_CREATE:
+    {
+        pCalc = new RegExpCalc();
+        SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)pCalc);
+        pCalc->Initialize(hwnd);
+        return 0;
+    }
+
+    case WM_COMMAND:
+    {
+        if (pCalc)
+        {
+            WORD notificationCode = HIWORD(wParam);
+            HWND hCtrl = (HWND)lParam;
+
+            // Handle combo box dropdown opening
+            if (notificationCode == CBN_DROPDOWN)
+            {
+                // Add current text to history when dropdown opens
+                int len = GetWindowTextLengthW(hCtrl);
+                if (len > 0)
+                {
+                    std::wstring wtext(len, L'\0');
+                    GetWindowTextW(hCtrl, &wtext[0], len + 1);
+                    
+                    // Convert to UTF-8
+                    int utf8Len = WideCharToMultiByte(CP_UTF8, 0, wtext.c_str(), -1, nullptr, 0, nullptr, nullptr);
+                    std::string currentText;
+                    if (utf8Len > 0)
+                    {
+                        currentText.resize(utf8Len - 1);
+                        WideCharToMultiByte(CP_UTF8, 0, wtext.c_str(), -1, &currentText[0], utf8Len, nullptr, nullptr);
+                    }
+                    
+                    if (!currentText.empty())
+                    {
+                        int ctrlId = GetDlgCtrlID(hCtrl);
+                        int fieldIndex = 0;
+                        
+                        switch (ctrlId)
+                        {
+                        case IDC_SOURCE_EDIT: fieldIndex = 0; break;
+                        case IDC_REGEXP_EDIT: fieldIndex = 1; break;
+                        case IDC_REPLACE_EDIT: fieldIndex = 2; break;
+                        case IDC_FORMAT_EDIT: fieldIndex = 0; break;
+                        case IDC_PARAMETERS_EDIT: fieldIndex = 1; break;
+                        case IDC_DATA_EDIT: fieldIndex = 1; break;
+                        }
+                        
+                        pCalc->AddToHistory(currentText, pCalc->GetCurrentMode(), fieldIndex);
+                    }
+                }
+                return 0;
+            }
+            
+            // Handle combo box selection changes
+            if (notificationCode == CBN_SELCHANGE)
+            {
+                int selection = (int)SendMessage(hCtrl, CB_GETCURSEL, 0, 0);
+                if (selection != CB_ERR)
+                {
+                    // Determine which combo box and load appropriate history item
+                    int ctrlId = GetDlgCtrlID(hCtrl);
+                    pCalc->LoadHistoryItem(selection, pCalc->GetCurrentMode(), ctrlId);
+                }
+                return 0;
+            }
+
+            // Handle edit control changes (from ComboBox)
+            if (notificationCode == CBN_EDITCHANGE)
+            {
+                pCalc->OnTextChanged();
+                return 0;
+            }
+
+            // Handle menu commands
+            pCalc->OnCommand(LOWORD(wParam));
+        }
+        break;
+    }
+
+    case WM_KEYDOWN:
+        if (pCalc)
+        {
+            pCalc->OnKeyDown(wParam);
+        }
+        break;
+
+    case WM_SIZE:
+        if (pCalc)
+        {
+            pCalc->UpdateLayout();
+        }
+        break;
+
+    case WM_MOVE:
+        if (pCalc)
+        {
+            RECT rect;
+            GetWindowRect(hwnd, &rect);
+            pCalc->OnMove(rect.left, rect.top);
+        }
+        break;
+
+    case WM_PAINT:
+        if (pCalc)
+        {
+            pCalc->OnPaint();
+        }
+        break;
+
+    case WM_CTLCOLOREDIT:
+    case WM_CTLCOLORSTATIC:
+        if (pCalc && lParam)
+        {
+            // Set white background and black text for all controls
+            WORD ctrlId = GetDlgCtrlID((HWND)lParam);
+            if (ctrlId != 0) // Valid control ID
+            {
+                SetTextColor((HDC)wParam, RGB(0, 0, 0));    // Black text
+                SetBkColor((HDC)wParam, RGB(255, 255, 255)); // White background
+                return (LRESULT)GetStockObject(WHITE_BRUSH);
+            }
+        }
+        break;
+
+    case WM_DESTROY:
+        if (pCalc)
+        {
+            pCalc->OnDestroy();
+            // Don't delete pCalc here - it's a static variable
+            // The system will clean it up when the process exits
+        }
+        PostQuitMessage(0);
+        break;
+
+    default:
+        return DefWindowProc(hwnd, uMsg, wParam, lParam);
+    }
+
+    return 0;
+}
+
+
+// RegExpCalc implementation
+RegExpCalc::RegExpCalc()
+    : m_hInst(nullptr),
+      m_hWnd(nullptr),
+      m_hSourceInput(nullptr),
+      m_hRegExpInput(nullptr),
+      m_hReplaceInput(nullptr),
+      m_hFormatInput(nullptr),
+      m_hParametersInput(nullptr),
+      m_hDataInput(nullptr),
+      m_hResultEdit(nullptr),
+      m_hSourceLabel(nullptr),
+      m_hRegExpLabel(nullptr),
+      m_hReplaceLabel(nullptr),
+      m_hFormatLabel(nullptr),
+      m_hParametersLabel(nullptr),
+      m_hDataLabel(nullptr),
+      m_hMenu(nullptr),
+      m_currentMode(AppMode::REGEXP),
+      m_currentEngine(RegExpEngineType::CLASSIC),
+      m_fontSize(DEFAULT_FONT_SIZE),
+      m_opacity(100), m_alwaysOnTop(false),
+      m_uiReady(false),
+      m_windowX(100), m_windowY(100),
+      m_windowWidth(700), m_windowHeight(300),
+      m_dpiX(96), m_dpiY(96),
+      m_hWhiteBrush(nullptr),
+      m_hFont(nullptr),
+      m_originalInputProc(nullptr),
+      m_originalComboProc(nullptr)
+{
+    m_hWhiteBrush = CreateSolidBrush(RGB(255, 255, 255));
+    CreateRegExpEngine(m_currentEngine);
+}
+
+RegExpCalc::~RegExpCalc()
+{
+    // Don't delete brushes and fonts here - they might be shared
+    // The system will clean them up when the process exits
+}
+
+BOOL RegExpCalc::InitInstance(HINSTANCE hInstance, int nCmdShow)
+{
+    m_hInst = hInstance;
+    if (!RegisterClass(hInstance)) return FALSE;
+    LoadSettings();
+    m_hWnd = CreateWindow(L"RegExpCalcClass", L"RegExp Calculator",
+        WS_OVERLAPPEDWINDOW,
+        m_windowX, m_windowY,
+        m_windowWidth, m_windowHeight,
+        nullptr, nullptr, hInstance, nullptr);
+    if (!m_hWnd) return FALSE;
+    ShowWindow(m_hWnd, nCmdShow);
+    UpdateWindow(m_hWnd);
+    return TRUE;
+}
+
+ATOM RegExpCalc::RegisterClass(HINSTANCE hInstance)
+{
+    WNDCLASSEXW wcex = {};
+    wcex.cbSize = sizeof(WNDCLASSEXW);
+    wcex.style = CS_HREDRAW | CS_VREDRAW;
+    wcex.lpfnWndProc = WindowProc;
+    wcex.cbClsExtra = 0;
+    wcex.cbWndExtra = 0;
+    wcex.hInstance = hInstance;
+    wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_REGEXPCALC));
+    wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
+    wcex.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
+    wcex.lpszMenuName = MAKEINTRESOURCE(IDC_REGEXPCALC);
+    wcex.lpszClassName = L"RegExpCalcClass";
+    wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
+
+    return RegisterClassExW(&wcex);
+}
+
+void RegExpCalc::Initialize(HWND hwnd)
+{
+    m_hWnd = hwnd;
+    
+    // Get menu handle
+    m_hMenu = GetMenu(hwnd);
+    
+    InitializeDPI();
+    UpdateFont();
+    
+    // Create all controls
+    OnCreate();
+    
+    // Load history and settings
+    LoadHistory();
+    LoadSettings();
+    
+    m_uiReady = true;
+    
+    // Apply loaded settings
+    SetAlwaysOnTop(m_alwaysOnTop);
+    SetWindowOpacity(m_opacity);
+    
+    // Update combo boxes with loaded history
+    UpdateHistoryCombo(m_hSourceInput, m_sourceHistory);
+    UpdateHistoryCombo(m_hRegExpInput, m_regexpHistory);
+    UpdateHistoryCombo(m_hReplaceInput, m_replaceHistory);
+    UpdateHistoryCombo(m_hFormatInput, m_currentMode == AppMode::PRINTF ? m_printfFormatHistory : m_scanfFormatHistory);
+    UpdateHistoryCombo(m_hParametersInput, m_parametersHistory);
+    UpdateHistoryCombo(m_hDataInput, m_dataHistory);
+    
+    // Load last entered values
+    LoadCurrentValues();
+    
+    // Update menu checks for initial state
+    UpdateMenuChecks();
+    
+    // Update layout for current mode
+    UpdateLayoutForMode(m_currentMode);
+    
+    // Initial evaluation
+    EvaluateExpression();
+    
+    // Set focus to first input field and remove selection from all fields
+    HWND hFirstInput = nullptr;
+    switch (m_currentMode)
+    {
+    case AppMode::REGEXP:
+        hFirstInput = m_hSourceInput;
+        // Remove selection from all RegExp fields
+        PostMessage(m_hSourceInput, CB_SETEDITSEL, 0, MAKELPARAM(-1, 0));
+        PostMessage(m_hRegExpInput, CB_SETEDITSEL, 0, MAKELPARAM(-1, 0));
+        PostMessage(m_hReplaceInput, CB_SETEDITSEL, 0, MAKELPARAM(-1, 0));
+        break;
+    case AppMode::PRINTF:
+        hFirstInput = m_hFormatInput;
+        // Remove selection from all Printf fields
+        PostMessage(m_hFormatInput, CB_SETEDITSEL, 0, MAKELPARAM(-1, 0));
+        PostMessage(m_hParametersInput, CB_SETEDITSEL, 0, MAKELPARAM(-1, 0));
+        break;
+    case AppMode::SCANF:
+        hFirstInput = m_hFormatInput;
+        // Remove selection from all Scanf fields
+        PostMessage(m_hFormatInput, CB_SETEDITSEL, 0, MAKELPARAM(-1, 0));
+        PostMessage(m_hDataInput, CB_SETEDITSEL, 0, MAKELPARAM(-1, 0));
+        break;
+    }
+    if (hFirstInput)
+    {
+        SetFocus(hFirstInput);
+    }
+}
+
+void RegExpCalc::OnCreate()
+{
+    // Create labels
+    m_hSourceLabel = CreateWindowW(L"STATIC", L"Source:",
+        WS_CHILD | WS_VISIBLE | SS_LEFT,
+        0, 0, 10, 10, m_hWnd, (HMENU)IDC_SOURCE_LABEL, m_hInst, nullptr);
+    m_hRegExpLabel = CreateWindowW(L"STATIC", L"RegExp:",
+        WS_CHILD | WS_VISIBLE | SS_LEFT,
+        0, 0, 10, 10, m_hWnd, (HMENU)IDC_REGEXP_LABEL, m_hInst, nullptr);
+    m_hReplaceLabel = CreateWindowW(L"STATIC", L"Replace:",
+        WS_CHILD | WS_VISIBLE | SS_LEFT,
+        0, 0, 10, 10, m_hWnd, (HMENU)IDC_REPLACE_LABEL, m_hInst, nullptr);
+    m_hFormatLabel = CreateWindowW(L"STATIC", L"Format:",
+        WS_CHILD | WS_VISIBLE | SS_LEFT,
+        0, 0, 10, 10, m_hWnd, (HMENU)IDC_FORMAT_LABEL, m_hInst, nullptr);
+    m_hParametersLabel = CreateWindowW(L"STATIC", L"Parameters:",
+        WS_CHILD | WS_VISIBLE | SS_LEFT,
+        0, 0, 10, 10, m_hWnd, (HMENU)IDC_PARAMETERS_LABEL, m_hInst, nullptr);
+    m_hDataLabel = CreateWindowW(L"STATIC", L"Data:",
+        WS_CHILD | WS_VISIBLE | SS_LEFT,
+        0, 0, 10, 10, m_hWnd, (HMENU)IDC_DATA_LABEL, m_hInst, nullptr);
+
+    m_hSourceInput = CreateWindowW(L"COMBOBOX", L"",
+        WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | CBS_DROPDOWN | CBS_AUTOHSCROLL,
+        0, 0, 10, 200, m_hWnd, (HMENU)IDC_SOURCE_EDIT, m_hInst, nullptr);
+
+    m_hRegExpInput = CreateWindowW(L"COMBOBOX", L"",
+        WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | CBS_DROPDOWN | CBS_AUTOHSCROLL,
+        0, 0, 10, 200, m_hWnd, (HMENU)IDC_REGEXP_EDIT, m_hInst, nullptr);
+
+    m_hReplaceInput = CreateWindowW(L"COMBOBOX", L"",
+        WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | CBS_DROPDOWN | CBS_AUTOHSCROLL,
+        0, 0, 10, 200, m_hWnd, (HMENU)IDC_REPLACE_EDIT, m_hInst, nullptr);
+
+    m_hFormatInput = CreateWindowW(L"COMBOBOX", L"",
+        WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | CBS_DROPDOWN | CBS_AUTOHSCROLL,
+        0, 0, 10, 200, m_hWnd, (HMENU)IDC_FORMAT_EDIT, m_hInst, nullptr);
+
+    m_hParametersInput = CreateWindowW(L"COMBOBOX", L"",
+        WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | CBS_DROPDOWN | CBS_AUTOHSCROLL,
+        0, 0, 10, 200, m_hWnd, (HMENU)IDC_PARAMETERS_EDIT, m_hInst, nullptr);
+
+    m_hDataInput = CreateWindowW(L"COMBOBOX", L"",
+        WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | CBS_DROPDOWN | CBS_AUTOHSCROLL,
+        0, 0, 10, 200, m_hWnd, (HMENU)IDC_DATA_EDIT, m_hInst, nullptr);
+
+    m_hResultEdit = CreateWindowW(L"EDIT", L"",
+        WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_MULTILINE | ES_READONLY,
+        0, 0, 10, 10, m_hWnd, (HMENU)IDC_RESULT_EDIT, m_hInst, nullptr);
+
+    // Шрифты
+    SendMessage(m_hSourceLabel, WM_SETFONT, (WPARAM)m_hFont, TRUE);
+    SendMessage(m_hRegExpLabel, WM_SETFONT, (WPARAM)m_hFont, TRUE);
+    SendMessage(m_hReplaceLabel, WM_SETFONT, (WPARAM)m_hFont, TRUE);
+    SendMessage(m_hFormatLabel, WM_SETFONT, (WPARAM)m_hFont, TRUE);
+    SendMessage(m_hParametersLabel, WM_SETFONT, (WPARAM)m_hFont, TRUE);
+    SendMessage(m_hDataLabel, WM_SETFONT, (WPARAM)m_hFont, TRUE);
+
+    SendMessage(m_hSourceInput, WM_SETFONT, (WPARAM)m_hFont, TRUE);
+    SendMessage(m_hRegExpInput, WM_SETFONT, (WPARAM)m_hFont, TRUE);
+    SendMessage(m_hReplaceInput, WM_SETFONT, (WPARAM)m_hFont, TRUE);
+    SendMessage(m_hFormatInput, WM_SETFONT, (WPARAM)m_hFont, TRUE);
+    SendMessage(m_hParametersInput, WM_SETFONT, (WPARAM)m_hFont, TRUE);
+    SendMessage(m_hDataInput, WM_SETFONT, (WPARAM)m_hFont, TRUE);
+    SendMessage(m_hResultEdit, WM_SETFONT, (WPARAM)m_hFont, TRUE);
+
+    // Subclass combo boxes for custom behavior
+    m_originalComboProc = (WNDPROC)SetWindowLongPtr(m_hSourceInput, GWLP_WNDPROC, (LONG_PTR)ComboSubclassProc);
+    SetWindowLongPtr(m_hRegExpInput, GWLP_WNDPROC, (LONG_PTR)ComboSubclassProc);
+    SetWindowLongPtr(m_hReplaceInput, GWLP_WNDPROC, (LONG_PTR)ComboSubclassProc);
+    SetWindowLongPtr(m_hFormatInput, GWLP_WNDPROC, (LONG_PTR)ComboSubclassProc);
+    SetWindowLongPtr(m_hParametersInput, GWLP_WNDPROC, (LONG_PTR)ComboSubclassProc);
+    SetWindowLongPtr(m_hDataInput, GWLP_WNDPROC, (LONG_PTR)ComboSubclassProc);
+}
+
+void RegExpCalc::OnSize(int width, int height)
+{
+    m_windowWidth = width;
+    m_windowHeight = height;
+    UpdateLayout();
+}
+
+void RegExpCalc::OnMove(int x, int y)
+{
+    m_windowX = x;
+    m_windowY = y;
+}
+
+void RegExpCalc::OnCommand(WPARAM wParam)
+{
+    int command = LOWORD(wParam);
+    
+    switch (command)
+    {
+    case ID_MODE_REGEXP:
+        SetAppMode(AppMode::REGEXP);
+        break;
+    case ID_MODE_PRINTF:
+        SetAppMode(AppMode::PRINTF);
+        break;
+    case ID_MODE_SCANF:
+        SetAppMode(AppMode::SCANF);
+        break;
+    case ID_ENGINE_CLASSIC:
+        SetRegExpEngine(RegExpEngineType::CLASSIC);
+        break;
+    case ID_ENGINE_MODERN:
+        SetRegExpEngine(RegExpEngineType::MODERN);
+        break;
+    case ID_ENGINE_PYTHON:
+        SetRegExpEngine(RegExpEngineType::PYTHON);
+        break;
+    case ID_CALC_ALWAYSONTOP:
+        SetAlwaysOnTop(!m_alwaysOnTop);
+        break;
+    case ID_CALC_EXIT:
+        PostMessage(m_hWnd, WM_CLOSE, 0, 0);
+        break;
+    case IDM_ABOUT:
+        DialogBox(m_hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), m_hWnd, About);
+        break;
+    }
+    
+    UpdateMenuChecks();
+}
+
+void RegExpCalc::OnPaint()
+{
+    PAINTSTRUCT ps;
+    HDC hdc = BeginPaint(m_hWnd, &ps);
+    EndPaint(m_hWnd, &ps);
+}
+
+void RegExpCalc::OnDestroy()
+{
+    SaveSettings();
+    SaveHistory();
+}
+
+void RegExpCalc::OnKeyDown(WPARAM key)
+{
+    switch (key)
+    {
+    case VK_HOME:
+        if (GetKeyState(VK_CONTROL) & 0x8000)
+        {
+            OnCtrlHome();
+        }
+        break;
+    case VK_OEM_PLUS:
+    case VK_ADD:
+        if (GetKeyState(VK_CONTROL) & 0x8000)
+        {
+            if (GetKeyState(VK_SHIFT) & 0x8000)
+            {
+                OnCtrlShiftPlus();
+            }
+            else
+            {
+                OnCtrlPlus();
+            }
+        }
+        break;
+    case VK_OEM_MINUS:
+    case VK_SUBTRACT:
+        if (GetKeyState(VK_CONTROL) & 0x8000)
+        {
+            if (GetKeyState(VK_SHIFT) & 0x8000)
+            {
+                OnCtrlShiftMinus();
+            }
+            else
+            {
+                OnCtrlMinus();
+            }
+        }
+        break;
+    }
+}
+
+void RegExpCalc::EvaluateExpression()
+{
+    if (!m_uiReady) return;
+    
+    ClearResult();
+    
+    switch (m_currentMode)
+    {
+    case AppMode::REGEXP:
+        EvaluateRegExp();
+        break;
+    case AppMode::PRINTF:
+        EvaluatePrintf();
+        break;
+    case AppMode::SCANF:
+        EvaluateScanf();
+        break;
+    }
+}
+
+void RegExpCalc::OnTextChanged()
+{
+    EvaluateExpression();
+}
+
+void RegExpCalc::UpdateMenuChecks()
+{
+    // Update mode menu items
+    CheckMenuItem(m_hMenu, ID_MODE_REGEXP, (m_currentMode == AppMode::REGEXP) ? MF_CHECKED : MF_UNCHECKED);
+    CheckMenuItem(m_hMenu, ID_MODE_PRINTF, (m_currentMode == AppMode::PRINTF) ? MF_CHECKED : MF_UNCHECKED);
+    CheckMenuItem(m_hMenu, ID_MODE_SCANF, (m_currentMode == AppMode::SCANF) ? MF_CHECKED : MF_UNCHECKED);
+    
+    // Update engine menu items
+    CheckMenuItem(m_hMenu, ID_ENGINE_CLASSIC, (m_currentEngine == RegExpEngineType::CLASSIC) ? MF_CHECKED : MF_UNCHECKED);
+    CheckMenuItem(m_hMenu, ID_ENGINE_MODERN, (m_currentEngine == RegExpEngineType::MODERN) ? MF_CHECKED : MF_UNCHECKED);
+    CheckMenuItem(m_hMenu, ID_ENGINE_PYTHON, (m_currentEngine == RegExpEngineType::PYTHON) ? MF_CHECKED : MF_UNCHECKED);
+    
+    // Update other menu items
+    CheckMenuItem(m_hMenu, ID_CALC_ALWAYSONTOP, m_alwaysOnTop ? MF_CHECKED : MF_UNCHECKED);
+}
+
+void RegExpCalc::SetAppMode(AppMode mode)
+{
+    if (m_currentMode == mode) return;
+    
+    m_currentMode = mode;
+    UpdateMenuChecks();
+    UpdateLayoutForMode(mode);
+    EvaluateExpression();
+}
+
+void RegExpCalc::SetRegExpEngine(RegExpEngineType engine)
+{
+    if (m_currentEngine == engine) return;
+    
+    m_currentEngine = engine;
+    CreateRegExpEngine(engine);
+    UpdateMenuChecks();
+    EvaluateExpression();
+}
+
+void RegExpCalc::CreateRegExpEngine(RegExpEngineType engine)
+{
+    switch (engine)
+    {
+    case RegExpEngineType::CLASSIC:
+        m_pRegExpEngine = std::make_unique<ClassicRegExpEngine>();
+        break;
+    case RegExpEngineType::MODERN:
+        m_pRegExpEngine = std::make_unique<ModernRegExpEngine>();
+        break;
+    case RegExpEngineType::PYTHON:
+        m_pRegExpEngine = std::make_unique<PythonRegExpEngine>();
+        break;
+    }
+}
+
+void RegExpCalc::OnCtrlHome()
+{
+    // Reset to default position and settings
+    SetWindowPos(m_hWnd, HWND_TOP, 100, 100, 0, 0, SWP_NOSIZE);
+    SetFontSize(DEFAULT_FONT_SIZE);
+    SetWindowOpacity(100);
+    SetAlwaysOnTop(false);
+}
+
+void RegExpCalc::OnCtrlPlus()
+{
+    if (m_fontSize < MAX_FONT_SIZE)
+    {
+        SetFontSize(m_fontSize + 1);
+    }
+}
+
+void RegExpCalc::OnCtrlMinus()
+{
+    if (m_fontSize > MIN_FONT_SIZE)
+    {
+        SetFontSize(m_fontSize - 1);
+    }
+}
+
+void RegExpCalc::OnCtrlShiftPlus()
+{
+    if (m_opacity < 100)
+    {
+        SetWindowOpacity(m_opacity + 10);
+    }
+}
+
+void RegExpCalc::OnCtrlShiftMinus()
+{
+    if (m_opacity > 10)
+    {
+        SetWindowOpacity(m_opacity - 10);
+    }
+}
+
+void RegExpCalc::LoadHistory()
+{
+    HKEY hKey;
+    LONG result = RegCreateKeyExW(HKEY_CURRENT_USER, 
+        L"Software\\RegExpCalc\\History", 
+        0, NULL, 0, KEY_READ, NULL, &hKey, NULL);
+    
+    if (result != ERROR_SUCCESS) return;
+    
+    // Helper lambda to load history for a field
+    auto LoadFieldHistory = [&](const wchar_t* valueName, std::vector<std::string>& history) {
+        DWORD dataSize = 0;
+        result = RegQueryValueExW(hKey, valueName, NULL, NULL, NULL, &dataSize);
+        if (result == ERROR_SUCCESS && dataSize > 0) {
+            std::vector<wchar_t> buffer(dataSize / sizeof(wchar_t));
+            result = RegQueryValueExW(hKey, valueName, NULL, NULL, 
+                (LPBYTE)buffer.data(), &dataSize);
+            if (result == ERROR_SUCCESS) {
+                // Parse multi-string (REG_MULTI_SZ format)
+                wchar_t* ptr = buffer.data();
+                while (*ptr) {
+                    std::wstring wstr(ptr);
+                    // Convert wstring to string using WideCharToMultiByte
+                    int len = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, nullptr, 0, nullptr, nullptr);
+                    if (len > 0) {
+                        std::string str(len - 1, '\0');
+                        WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, &str[0], len, nullptr, nullptr);
+                        history.push_back(str);
+                    }
+                    ptr += wstr.length() + 1;
+                }
+            }
+        }
+    };
+    
+    LoadFieldHistory(L"Source", m_sourceHistory);
+    LoadFieldHistory(L"RegExp", m_regexpHistory);
+    LoadFieldHistory(L"Replace", m_replaceHistory);
+    LoadFieldHistory(L"PrintfFormat", m_printfFormatHistory);
+    LoadFieldHistory(L"Parameters", m_parametersHistory);
+    LoadFieldHistory(L"ScanfFormat", m_scanfFormatHistory);
+    LoadFieldHistory(L"Data", m_dataHistory);
+    
+    RegCloseKey(hKey);
+}
+
+void RegExpCalc::SaveHistory()
+{
+    HKEY hKey;
+    LONG result = RegCreateKeyExW(HKEY_CURRENT_USER, 
+        L"Software\\RegExpCalc\\History", 
+        0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL);
+    
+    if (result != ERROR_SUCCESS) return;
+    
+    // Helper lambda to save history for a field
+    auto SaveFieldHistory = [&](const wchar_t* valueName, const std::vector<std::string>& history) {
+        if (history.empty()) {
+            RegDeleteValueW(hKey, valueName);
+            return;
+        }
+        
+        // Build multi-string buffer (REG_MULTI_SZ format)
+        std::vector<wchar_t> buffer;
+        for (const auto& item : history) {
+            std::wstring witem(item.begin(), item.end());
+            buffer.insert(buffer.end(), witem.begin(), witem.end());
+            buffer.push_back(L'\0');
+        }
+        buffer.push_back(L'\0'); // Double null terminator
+        
+        RegSetValueExW(hKey, valueName, 0, REG_MULTI_SZ, 
+            (LPBYTE)buffer.data(), (DWORD)(buffer.size() * sizeof(wchar_t)));
+    };
+    
+    SaveFieldHistory(L"Source", m_sourceHistory);
+    SaveFieldHistory(L"RegExp", m_regexpHistory);
+    SaveFieldHistory(L"Replace", m_replaceHistory);
+    SaveFieldHistory(L"PrintfFormat", m_printfFormatHistory);
+    SaveFieldHistory(L"Parameters", m_parametersHistory);
+    SaveFieldHistory(L"ScanfFormat", m_scanfFormatHistory);
+    SaveFieldHistory(L"Data", m_dataHistory);
+    
+    RegCloseKey(hKey);
+}
+
+void RegExpCalc::AddToHistory(const std::string& text, AppMode mode, int fieldIndex)
+{
+    if (text.empty()) return;
+    
+    std::vector<std::string>* pHistory = nullptr;
+    HWND hCombo = nullptr;
+    
+    // Determine which history vector and combo to use
+    switch (mode)
+    {
+    case AppMode::REGEXP:
+        switch (fieldIndex)
+        {
+        case 0: pHistory = &m_sourceHistory; hCombo = m_hSourceInput; break;
+        case 1: pHistory = &m_regexpHistory; hCombo = m_hRegExpInput; break;
+        case 2: pHistory = &m_replaceHistory; hCombo = m_hReplaceInput; break;
+        }
+        break;
+    case AppMode::PRINTF:
+        switch (fieldIndex)
+        {
+        case 0: pHistory = &m_printfFormatHistory; hCombo = m_hFormatInput; break;
+        case 1: pHistory = &m_parametersHistory; hCombo = m_hParametersInput; break;
+        }
+        break;
+    case AppMode::SCANF:
+        switch (fieldIndex)
+        {
+        case 0: pHistory = &m_scanfFormatHistory; hCombo = m_hFormatInput; break;
+        case 1: pHistory = &m_dataHistory; hCombo = m_hDataInput; break;
+        }
+        break;
+    }
+    
+    if (!pHistory || !hCombo) return;
+    
+    // Remove duplicate if exists
+    auto it = std::find(pHistory->begin(), pHistory->end(), text);
+    if (it != pHistory->end()) {
+        pHistory->erase(it);
+    }
+    
+    // Add to front of history
+    pHistory->insert(pHistory->begin(), text);
+    
+    // Limit history size
+    if (pHistory->size() > MAX_HISTORY) {
+        pHistory->resize(MAX_HISTORY);
+    }
+    
+    // Update combo box
+    UpdateHistoryCombo(hCombo, *pHistory);
+    
+    // Set current text properly
+    int len = MultiByteToWideChar(CP_UTF8, 0, text.c_str(), -1, nullptr, 0);
+    if (len > 0)
+    {
+        std::wstring wtext(len - 1, L'\0');
+        MultiByteToWideChar(CP_UTF8, 0, text.c_str(), -1, &wtext[0], len);
+        SetWindowTextW(hCombo, wtext.c_str());
+    }
+}
+
+void RegExpCalc::LoadHistoryItem(int index, AppMode mode, int fieldIndex)
+{
+    std::vector<std::string>* pHistory = nullptr;
+    
+    // Determine which history vector to use
+    switch (mode)
+    {
+    case AppMode::REGEXP:
+        switch (fieldIndex)
+        {
+        case IDC_SOURCE_EDIT: pHistory = &m_sourceHistory; break;
+        case IDC_REGEXP_EDIT: pHistory = &m_regexpHistory; break;
+        case IDC_REPLACE_EDIT: pHistory = &m_replaceHistory; break;
+        }
+        break;
+    case AppMode::PRINTF:
+        switch (fieldIndex)
+        {
+        case IDC_FORMAT_EDIT: pHistory = &m_printfFormatHistory; break;
+        case IDC_PARAMETERS_EDIT: pHistory = &m_parametersHistory; break;
+        }
+        break;
+    case AppMode::SCANF:
+        switch (fieldIndex)
+        {
+        case IDC_FORMAT_EDIT: pHistory = &m_scanfFormatHistory; break;
+        case IDC_DATA_EDIT: pHistory = &m_dataHistory; break;
+        }
+        break;
+    }
+    
+    if (!pHistory || index < 0 || index >= (int)pHistory->size()) return;
+    
+    // Item is already selected in combo box by the system
+    // Just trigger evaluation
+    EvaluateExpression();
+}
+
+void RegExpCalc::UpdateHistoryCombo(HWND hCombo, const std::vector<std::string>& history)
+{
+    if (!hCombo) return;
+    
+    SendMessage(hCombo, CB_RESETCONTENT, 0, 0);
+    
+    for (const auto& item : history)
+    {
+        if (item.empty()) continue;
+        
+        // Convert string to wstring properly
+        int len = MultiByteToWideChar(CP_UTF8, 0, item.c_str(), -1, nullptr, 0);
+        if (len > 0)
+        {
+            std::wstring witem(len - 1, L'\0');
+            MultiByteToWideChar(CP_UTF8, 0, item.c_str(), -1, &witem[0], len);
+            SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM)witem.c_str());
+        }
+    }
+}
+
+void RegExpCalc::DeleteSelectedHistoryItem(HWND hCombo, AppMode mode, int fieldIndex)
+{
+    int selection = (int)SendMessage(hCombo, CB_GETCURSEL, 0, 0);
+    if (selection != CB_ERR)
+    {
+        SendMessage(hCombo, CB_DELETESTRING, selection, 0);
+        // TODO: Remove from appropriate history vector
+    }
+}
+
+void RegExpCalc::DeleteSelectedHistoryItem(HWND hCombo, std::vector<std::string>& history)
+{
+    int selection = (int)SendMessage(hCombo, CB_GETCURSEL, 0, 0);
+    if (selection != CB_ERR && selection < (int)history.size())
+    {
+        history.erase(history.begin() + selection);
+        SendMessage(hCombo, CB_DELETESTRING, selection, 0);
+    }
+}
+
+void RegExpCalc::LoadSettings()
+{
+    HKEY hKey;
+    LONG result = RegCreateKeyExW(HKEY_CURRENT_USER, 
+        L"Software\\RegExpCalc\\Settings", 
+        0, NULL, 0, KEY_READ, NULL, &hKey, NULL);
+    
+    if (result != ERROR_SUCCESS) return;
+    
+    DWORD dwValue;
+    DWORD dwSize = sizeof(DWORD);
+    
+    // Load current mode
+    if (RegQueryValueExW(hKey, L"CurrentMode", NULL, NULL, (LPBYTE)&dwValue, &dwSize) == ERROR_SUCCESS)
+    {
+        if (dwValue <= 2) m_currentMode = (AppMode)dwValue;
+    }
+    
+    // Load current engine
+    if (RegQueryValueExW(hKey, L"CurrentEngine", NULL, NULL, (LPBYTE)&dwValue, &dwSize) == ERROR_SUCCESS)
+    {
+        if (dwValue <= 2) 
+        {
+            m_currentEngine = (RegExpEngineType)dwValue;
+            CreateRegExpEngine(m_currentEngine);
+        }
+    }
+    
+    // Load font size
+    if (RegQueryValueExW(hKey, L"FontSize", NULL, NULL, (LPBYTE)&dwValue, &dwSize) == ERROR_SUCCESS)
+    {
+        if (dwValue >= MIN_FONT_SIZE && dwValue <= MAX_FONT_SIZE)
+            m_fontSize = (int)dwValue;
+    }
+    
+    // Load opacity
+    if (RegQueryValueExW(hKey, L"Opacity", NULL, NULL, (LPBYTE)&dwValue, &dwSize) == ERROR_SUCCESS)
+    {
+        if (dwValue >= 10 && dwValue <= 100)
+            m_opacity = (int)dwValue;
+    }
+    
+    // Load always on top
+    if (RegQueryValueExW(hKey, L"AlwaysOnTop", NULL, NULL, (LPBYTE)&dwValue, &dwSize) == ERROR_SUCCESS)
+    {
+        m_alwaysOnTop = (dwValue != 0);
+    }
+    
+    // Load window position and size
+    if (RegQueryValueExW(hKey, L"WindowX", NULL, NULL, (LPBYTE)&dwValue, &dwSize) == ERROR_SUCCESS)
+        m_windowX = (int)dwValue;
+    if (RegQueryValueExW(hKey, L"WindowY", NULL, NULL, (LPBYTE)&dwValue, &dwSize) == ERROR_SUCCESS)
+        m_windowY = (int)dwValue;
+    if (RegQueryValueExW(hKey, L"WindowWidth", NULL, NULL, (LPBYTE)&dwValue, &dwSize) == ERROR_SUCCESS)
+        m_windowWidth = (int)dwValue;
+    if (RegQueryValueExW(hKey, L"WindowHeight", NULL, NULL, (LPBYTE)&dwValue, &dwSize) == ERROR_SUCCESS)
+        m_windowHeight = (int)dwValue;
+    
+    RegCloseKey(hKey);
+}
+
+std::string RegExpCalc::LoadStringFromRegistry(HKEY hKey, const wchar_t* valueName)
+{
+    DWORD dataSize = 0;
+    if (RegQueryValueExW(hKey, valueName, NULL, NULL, NULL, &dataSize) == ERROR_SUCCESS && dataSize > 0)
+    {
+        std::vector<wchar_t> buffer(dataSize / sizeof(wchar_t));
+        if (RegQueryValueExW(hKey, valueName, NULL, NULL, (LPBYTE)buffer.data(), &dataSize) == ERROR_SUCCESS)
+        {
+            // Convert to UTF-8
+            int utf8Len = WideCharToMultiByte(CP_UTF8, 0, buffer.data(), -1, nullptr, 0, nullptr, nullptr);
+            if (utf8Len > 0)
+            {
+                std::string result(utf8Len - 1, '\0');
+                WideCharToMultiByte(CP_UTF8, 0, buffer.data(), -1, &result[0], utf8Len, nullptr, nullptr);
+                return result;
+            }
+        }
+    }
+    return "";
+}
+
+void RegExpCalc::LoadCurrentValues()
+{
+    HKEY hKey;
+    LONG result = RegCreateKeyExW(HKEY_CURRENT_USER, 
+        L"Software\\RegExpCalc\\CurrentValues", 
+        0, NULL, 0, KEY_READ, NULL, &hKey, NULL);
+    
+    if (result != ERROR_SUCCESS) return;
+    
+    // Load current values for each field
+    std::string sourceText = LoadStringFromRegistry(hKey, L"Source");
+    std::string regexpText = LoadStringFromRegistry(hKey, L"RegExp");
+    std::string replaceText = LoadStringFromRegistry(hKey, L"Replace");
+    std::string printfFormatText = LoadStringFromRegistry(hKey, L"PrintfFormat");
+    std::string parametersText = LoadStringFromRegistry(hKey, L"Parameters");
+    std::string scanfFormatText = LoadStringFromRegistry(hKey, L"ScanfFormat");
+    std::string dataText = LoadStringFromRegistry(hKey, L"Data");
+    
+    RegCloseKey(hKey);
+    
+    // Apply loaded values to controls (must be called after controls are created)
+    if (m_uiReady)
+    {
+        if (!sourceText.empty()) SetCurrentText(AppMode::REGEXP, 0, sourceText);
+        if (!regexpText.empty()) SetCurrentText(AppMode::REGEXP, 1, regexpText);
+        if (!replaceText.empty()) SetCurrentText(AppMode::REGEXP, 2, replaceText);
+        
+        if (!printfFormatText.empty()) SetCurrentText(AppMode::PRINTF, 0, printfFormatText);
+        if (!parametersText.empty()) SetCurrentText(AppMode::PRINTF, 1, parametersText);
+        
+        if (!scanfFormatText.empty()) SetCurrentText(AppMode::SCANF, 0, scanfFormatText);
+        if (!dataText.empty()) SetCurrentText(AppMode::SCANF, 1, dataText);
+    }
+}
+
+void RegExpCalc::SaveSettings()
+{
+    HKEY hKey;
+    LONG result = RegCreateKeyExW(HKEY_CURRENT_USER, 
+        L"Software\\RegExpCalc\\Settings", 
+        0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL);
+    
+    if (result != ERROR_SUCCESS) return;
+    
+    DWORD dwValue;
+    
+    // Save current mode
+    dwValue = (DWORD)m_currentMode;
+    RegSetValueExW(hKey, L"CurrentMode", 0, REG_DWORD, (LPBYTE)&dwValue, sizeof(DWORD));
+    
+    // Save current engine
+    dwValue = (DWORD)m_currentEngine;
+    RegSetValueExW(hKey, L"CurrentEngine", 0, REG_DWORD, (LPBYTE)&dwValue, sizeof(DWORD));
+    
+    // Save font size
+    dwValue = (DWORD)m_fontSize;
+    RegSetValueExW(hKey, L"FontSize", 0, REG_DWORD, (LPBYTE)&dwValue, sizeof(DWORD));
+    
+    // Save opacity
+    dwValue = (DWORD)m_opacity;
+    RegSetValueExW(hKey, L"Opacity", 0, REG_DWORD, (LPBYTE)&dwValue, sizeof(DWORD));
+    
+    // Save always on top
+    dwValue = m_alwaysOnTop ? 1 : 0;
+    RegSetValueExW(hKey, L"AlwaysOnTop", 0, REG_DWORD, (LPBYTE)&dwValue, sizeof(DWORD));
+    
+    // Save window position and size
+    RECT rect;
+    GetWindowRect(m_hWnd, &rect);
+    m_windowX = rect.left;
+    m_windowY = rect.top;
+    m_windowWidth = rect.right - rect.left;
+    m_windowHeight = rect.bottom - rect.top;
+    
+    dwValue = (DWORD)m_windowX;
+    RegSetValueExW(hKey, L"WindowX", 0, REG_DWORD, (LPBYTE)&dwValue, sizeof(DWORD));
+    dwValue = (DWORD)m_windowY;
+    RegSetValueExW(hKey, L"WindowY", 0, REG_DWORD, (LPBYTE)&dwValue, sizeof(DWORD));
+    dwValue = (DWORD)m_windowWidth;
+    RegSetValueExW(hKey, L"WindowWidth", 0, REG_DWORD, (LPBYTE)&dwValue, sizeof(DWORD));
+    dwValue = (DWORD)m_windowHeight;
+    RegSetValueExW(hKey, L"WindowHeight", 0, REG_DWORD, (LPBYTE)&dwValue, sizeof(DWORD));
+    
+    RegCloseKey(hKey);
+    
+    // Save current values
+    SaveCurrentValues();
+}
+
+void RegExpCalc::SaveCurrentValues()
+{
+    HKEY hKey;
+    LONG result = RegCreateKeyExW(HKEY_CURRENT_USER, 
+        L"Software\\RegExpCalc\\CurrentValues", 
+        0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL);
+    
+    if (result != ERROR_SUCCESS) return;
+    
+    // Helper lambda to save a string value
+    auto SaveStringValue = [&](const wchar_t* valueName, const std::string& value) {
+        if (value.empty())
+        {
+            RegDeleteValueW(hKey, valueName);
+            return;
+        }
+        
+        // Convert to wide string
+        int len = MultiByteToWideChar(CP_UTF8, 0, value.c_str(), -1, nullptr, 0);
+        if (len > 0)
+        {
+            std::wstring wvalue(len - 1, L'\0');
+            MultiByteToWideChar(CP_UTF8, 0, value.c_str(), -1, &wvalue[0], len);
+            RegSetValueExW(hKey, valueName, 0, REG_SZ, 
+                (LPBYTE)wvalue.c_str(), (DWORD)((wvalue.length() + 1) * sizeof(wchar_t)));
+        }
+    };
+    
+    // Get current values from controls
+    std::string sourceText = GetCurrentText(AppMode::REGEXP, 0);
+    std::string regexpText = GetCurrentText(AppMode::REGEXP, 1);
+    std::string replaceText = GetCurrentText(AppMode::REGEXP, 2);
+    std::string printfFormatText = GetCurrentText(AppMode::PRINTF, 0);
+    std::string parametersText = GetCurrentText(AppMode::PRINTF, 1);
+    std::string scanfFormatText = GetCurrentText(AppMode::SCANF, 0);
+    std::string dataText = GetCurrentText(AppMode::SCANF, 1);
+    
+    // Save all values
+    SaveStringValue(L"Source", sourceText);
+    SaveStringValue(L"RegExp", regexpText);
+    SaveStringValue(L"Replace", replaceText);
+    SaveStringValue(L"PrintfFormat", printfFormatText);
+    SaveStringValue(L"Parameters", parametersText);
+    SaveStringValue(L"ScanfFormat", scanfFormatText);
+    SaveStringValue(L"Data", dataText);
+    
+    RegCloseKey(hKey);
+}
+
+void RegExpCalc::InitializeDPI()
+{
+    HDC hdc = GetDC(m_hWnd);
+    m_dpiX = GetDeviceCaps(hdc, LOGPIXELSX);
+    m_dpiY = GetDeviceCaps(hdc, LOGPIXELSY);
+    ReleaseDC(m_hWnd, hdc);
+}
+
+int RegExpCalc::ScaleDPI(int value)
+{
+    return MulDiv(value, m_dpiX, 96);
+}
+
+void RegExpCalc::UpdateLayout()
+{
+    UpdateLayoutForMode(m_currentMode);
+}
+
+void RegExpCalc::UpdateLayoutForMode(AppMode mode)
+{
+    RECT rect;
+    GetClientRect(m_hWnd, &rect);
+
+    int width = rect.right - rect.left;
+    int x = BORDER_MARGIN;
+    int y = BORDER_MARGIN;
+    int cbWidth = width - LABEL_WIDTH - 2 * BORDER_MARGIN;
+
+    ShowControlsForMode(mode);
+
+    if (mode == AppMode::REGEXP)
+    {
+        MoveWindow(m_hSourceLabel, x, y, LABEL_WIDTH, CONTROL_HEIGHT, TRUE);
+        MoveWindow(m_hSourceInput, x + LABEL_WIDTH, y, cbWidth, CONTROL_HEIGHT, TRUE);
+        y += CONTROL_HEIGHT + BORDER_MARGIN;
+
+        MoveWindow(m_hRegExpLabel, x, y, LABEL_WIDTH, CONTROL_HEIGHT, TRUE);
+        MoveWindow(m_hRegExpInput, x + LABEL_WIDTH, y, cbWidth, CONTROL_HEIGHT, TRUE);
+        y += CONTROL_HEIGHT + BORDER_MARGIN;
+
+        MoveWindow(m_hReplaceLabel, x, y, LABEL_WIDTH, CONTROL_HEIGHT, TRUE);
+        MoveWindow(m_hReplaceInput, x + LABEL_WIDTH, y, cbWidth, CONTROL_HEIGHT, TRUE);
+        y += CONTROL_HEIGHT + BORDER_MARGIN;
+    }
+    else if (mode == AppMode::PRINTF)
+    {
+        MoveWindow(m_hFormatLabel, x, y, LABEL_WIDTH, CONTROL_HEIGHT, TRUE);
+        MoveWindow(m_hFormatInput, x + LABEL_WIDTH, y, cbWidth, CONTROL_HEIGHT, TRUE);
+        y += CONTROL_HEIGHT + BORDER_MARGIN;
+
+        MoveWindow(m_hParametersLabel, x, y, LABEL_WIDTH, CONTROL_HEIGHT, TRUE);
+        MoveWindow(m_hParametersInput, x + LABEL_WIDTH, y, cbWidth, CONTROL_HEIGHT, TRUE);
+        y += CONTROL_HEIGHT + BORDER_MARGIN;
+    }
+    else if (mode == AppMode::SCANF)
+    {
+        MoveWindow(m_hFormatLabel, x, y, LABEL_WIDTH, CONTROL_HEIGHT, TRUE);
+        MoveWindow(m_hFormatInput, x + LABEL_WIDTH, y, cbWidth, CONTROL_HEIGHT, TRUE);
+        y += CONTROL_HEIGHT + BORDER_MARGIN;
+
+        MoveWindow(m_hDataLabel, x, y, LABEL_WIDTH, CONTROL_HEIGHT, TRUE);
+        MoveWindow(m_hDataInput, x + LABEL_WIDTH, y, cbWidth, CONTROL_HEIGHT, TRUE);
+        y += CONTROL_HEIGHT + BORDER_MARGIN;
+    }
+
+    // --- Result EditText занимает всю оставшуюся высоту ---
+    int heightClient = rect.bottom - rect.top;
+    int resultHeight = heightClient - y - BORDER_MARGIN;
+    if (resultHeight < CONTROL_HEIGHT) resultHeight = CONTROL_HEIGHT;
+    MoveWindow(m_hResultEdit, x, y, width - 2 * BORDER_MARGIN, resultHeight, TRUE);
+}
+void RegExpCalc::UpdateFont()
+{
+    if (m_hFont)
+    {
+        DeleteObject(m_hFont);
+    }
+    
+    m_hFont = CreateFontW(
+        ScaleDPI(m_fontSize), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, L"Courier New"
+    );
+    
+    if (m_uiReady)
+    {
+        // Update fonts for all controls
+        SendMessage(m_hSourceLabel, WM_SETFONT, (WPARAM)m_hFont, TRUE);
+        SendMessage(m_hRegExpLabel, WM_SETFONT, (WPARAM)m_hFont, TRUE);
+        SendMessage(m_hReplaceLabel, WM_SETFONT, (WPARAM)m_hFont, TRUE);
+        SendMessage(m_hFormatLabel, WM_SETFONT, (WPARAM)m_hFont, TRUE);
+        SendMessage(m_hParametersLabel, WM_SETFONT, (WPARAM)m_hFont, TRUE);
+        SendMessage(m_hDataLabel, WM_SETFONT, (WPARAM)m_hFont, TRUE);
+        
+        SendMessage(m_hSourceInput, WM_SETFONT, (WPARAM)m_hFont, TRUE);
+        SendMessage(m_hRegExpInput, WM_SETFONT, (WPARAM)m_hFont, TRUE);
+        SendMessage(m_hReplaceInput, WM_SETFONT, (WPARAM)m_hFont, TRUE);
+        SendMessage(m_hFormatInput, WM_SETFONT, (WPARAM)m_hFont, TRUE);
+        SendMessage(m_hParametersInput, WM_SETFONT, (WPARAM)m_hFont, TRUE);
+        SendMessage(m_hDataInput, WM_SETFONT, (WPARAM)m_hFont, TRUE);
+        SendMessage(m_hResultEdit, WM_SETFONT, (WPARAM)m_hFont, TRUE);
+        
+        UpdateLayout();
+    }
+}
+
+int RegExpCalc::GetCharWidth()
+{
+    HDC hdc = GetDC(m_hWnd);
+    HFONT oldFont = (HFONT)SelectObject(hdc, m_hFont);
+    
+    TEXTMETRIC tm;
+    GetTextMetrics(hdc, &tm);
+    
+    SelectObject(hdc, oldFont);
+    ReleaseDC(m_hWnd, hdc);
+    
+    return tm.tmAveCharWidth;
+}
+
+int RegExpCalc::GetCharHeight()
+{
+    HDC hdc = GetDC(m_hWnd);
+    HFONT oldFont = (HFONT)SelectObject(hdc, m_hFont);
+    
+    TEXTMETRIC tm;
+    GetTextMetrics(hdc, &tm);
+    
+    SelectObject(hdc, oldFont);
+    ReleaseDC(m_hWnd, hdc);
+    
+    return tm.tmHeight;
+}
+
+int RegExpCalc::GetControlHeight()
+{
+    return GetCharHeight() + ScaleDPI(8);
+}
+
+int RegExpCalc::CalculateOptimalWidth(int charCount)
+{
+    return GetCharWidth() * charCount + ScaleDPI(20);
+}
+
+void RegExpCalc::ShowHelp()
+{
+    // TODO: Show help file
+}
+
+void RegExpCalc::SetWindowOpacity(int opacity)
+{
+    m_opacity = opacity;
+    
+    if (opacity >= 100)
+    {
+        SetWindowLong(m_hWnd, GWL_EXSTYLE, GetWindowLong(m_hWnd, GWL_EXSTYLE) & ~WS_EX_LAYERED);
+        SetLayeredWindowAttributes(m_hWnd, 0, 255, LWA_ALPHA);
+    }
+    else
+    {
+        SetWindowLong(m_hWnd, GWL_EXSTYLE, GetWindowLong(m_hWnd, GWL_EXSTYLE) | WS_EX_LAYERED);
+        SetLayeredWindowAttributes(m_hWnd, 0, (BYTE)(255 * opacity / 100), LWA_ALPHA);
+    }
+}
+
+void RegExpCalc::SetFontSize(int size)
+{
+    if (size >= MIN_FONT_SIZE && size <= MAX_FONT_SIZE)
+    {
+        m_fontSize = size;
+        UpdateFont();
+    }
+}
+
+void RegExpCalc::SetAlwaysOnTop(bool alwaysOnTop)
+{
+    m_alwaysOnTop = alwaysOnTop;
+    
+    SetWindowPos(m_hWnd, 
+        alwaysOnTop ? HWND_TOPMOST : HWND_NOTOPMOST,
+        0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+    
+    UpdateMenuChecks();
+}
+
+void RegExpCalc::ShowControlsForMode(AppMode mode)
+{
+    // Hide all first
+    HideAllControls();
+
+    if (mode == AppMode::REGEXP)
+    {
+        if (m_hSourceLabel) ShowWindow(m_hSourceLabel, SW_SHOW);
+        if (m_hSourceInput) ShowWindow(m_hSourceInput, SW_SHOW);
+        if (m_hRegExpLabel) ShowWindow(m_hRegExpLabel, SW_SHOW);
+        if (m_hRegExpInput) ShowWindow(m_hRegExpInput, SW_SHOW);
+        if (m_hReplaceLabel) ShowWindow(m_hReplaceLabel, SW_SHOW);
+        if (m_hReplaceInput) ShowWindow(m_hReplaceInput, SW_SHOW);
+    }
+    else if (mode == AppMode::PRINTF)
+    {
+        if (m_hFormatLabel) ShowWindow(m_hFormatLabel, SW_SHOW);
+        if (m_hFormatInput) 
+        {
+            ShowWindow(m_hFormatInput, SW_SHOW);
+            UpdateHistoryCombo(m_hFormatInput, m_printfFormatHistory);
+        }
+        if (m_hParametersLabel) ShowWindow(m_hParametersLabel, SW_SHOW);
+        if (m_hParametersInput) ShowWindow(m_hParametersInput, SW_SHOW);
+    }
+    else if (mode == AppMode::SCANF)
+    {
+        if (m_hFormatLabel) ShowWindow(m_hFormatLabel, SW_SHOW);
+        if (m_hFormatInput) 
+        {
+            ShowWindow(m_hFormatInput, SW_SHOW);
+            UpdateHistoryCombo(m_hFormatInput, m_scanfFormatHistory);
+        }
+        if (m_hDataLabel) ShowWindow(m_hDataLabel, SW_SHOW);
+        if (m_hDataInput) ShowWindow(m_hDataInput, SW_SHOW);
+    }
+
+    if (m_hResultEdit) ShowWindow(m_hResultEdit, SW_SHOW);
+    
+    // Force redraw
+    if (m_hWnd)
+    {
+        InvalidateRect(m_hWnd, nullptr, TRUE);
+        UpdateWindow(m_hWnd);
+    }
+}
+
+void RegExpCalc::HideAllControls()
+{
+    if (m_hSourceLabel) ShowWindow(m_hSourceLabel, SW_HIDE);
+    if (m_hSourceInput) ShowWindow(m_hSourceInput, SW_HIDE);
+    if (m_hRegExpLabel) ShowWindow(m_hRegExpLabel, SW_HIDE);
+    if (m_hRegExpInput) ShowWindow(m_hRegExpInput, SW_HIDE);
+    if (m_hReplaceLabel) ShowWindow(m_hReplaceLabel, SW_HIDE);
+    if (m_hReplaceInput) ShowWindow(m_hReplaceInput, SW_HIDE);
+    if (m_hFormatLabel) ShowWindow(m_hFormatLabel, SW_HIDE);
+    if (m_hFormatInput) ShowWindow(m_hFormatInput, SW_HIDE);
+    if (m_hParametersLabel) ShowWindow(m_hParametersLabel, SW_HIDE);
+    if (m_hParametersInput) ShowWindow(m_hParametersInput, SW_HIDE);
+    if (m_hDataLabel) ShowWindow(m_hDataLabel, SW_HIDE);
+    if (m_hDataInput) ShowWindow(m_hDataInput, SW_HIDE);
+}
+
+std::string RegExpCalc::GetCurrentText(AppMode mode, int fieldIndex)
+{
+    HWND hInput = nullptr;
+    
+    switch (mode)
+    {
+    case AppMode::REGEXP:
+        switch (fieldIndex)
+        {
+        case 0: hInput = m_hSourceInput; break;
+        case 1: hInput = m_hRegExpInput; break;
+        case 2: hInput = m_hReplaceInput; break;
+        }
+        break;
+    case AppMode::PRINTF:
+        switch (fieldIndex)
+        {
+        case 0: hInput = m_hFormatInput; break;
+        case 1: hInput = m_hParametersInput; break;
+        }
+        break;
+    case AppMode::SCANF:
+        switch (fieldIndex)
+        {
+        case 0: hInput = m_hFormatInput; break;
+        case 1: hInput = m_hDataInput; break;
+        }
+        break;
+    }
+    
+    if (hInput)
+    {
+        int length = GetWindowTextLengthW(hInput);
+        if (length > 0)
+        {
+            std::wstring wtext(length, L'\0');
+            GetWindowTextW(hInput, &wtext[0], length + 1);
+            
+            // Convert to UTF-8
+            int utf8Len = WideCharToMultiByte(CP_UTF8, 0, wtext.c_str(), -1, nullptr, 0, nullptr, nullptr);
+            if (utf8Len > 0)
+            {
+                std::string text(utf8Len - 1, '\0');
+                WideCharToMultiByte(CP_UTF8, 0, wtext.c_str(), -1, &text[0], utf8Len, nullptr, nullptr);
+                return text;
+            }
+        }
+    }
+    
+    return "";
+}
+
+void RegExpCalc::SetCurrentText(AppMode mode, int fieldIndex, const std::string& text)
+{
+    HWND hInput = nullptr;
+    
+    switch (mode)
+    {
+    case AppMode::REGEXP:
+        switch (fieldIndex)
+        {
+        case 0: hInput = m_hSourceInput; break;
+        case 1: hInput = m_hRegExpInput; break;
+        case 2: hInput = m_hReplaceInput; break;
+        }
+        break;
+    case AppMode::PRINTF:
+        switch (fieldIndex)
+        {
+        case 0: hInput = m_hFormatInput; break;
+        case 1: hInput = m_hParametersInput; break;
+        }
+        break;
+    case AppMode::SCANF:
+        switch (fieldIndex)
+        {
+        case 0: hInput = m_hFormatInput; break;
+        case 1: hInput = m_hDataInput; break;
+        }
+        break;
+    }
+    
+    if (hInput)
+    {
+        int len = MultiByteToWideChar(CP_UTF8, 0, text.c_str(), -1, nullptr, 0);
+        if (len > 0)
+        {
+            std::wstring wtext(len - 1, L'\0');
+            MultiByteToWideChar(CP_UTF8, 0, text.c_str(), -1, &wtext[0], len);
+            
+            // Just set the text, selection will be handled when focus is set
+            SetWindowTextW(hInput, wtext.c_str());
+        }
+    }
+}
+
+void RegExpCalc::ClearResult()
+{
+    SetWindowTextA(m_hResultEdit, "");
+}
+
+void RegExpCalc::AppendResult(const std::string& text)
+{
+    int length = GetWindowTextLengthA(m_hResultEdit);
+    SendMessageA(m_hResultEdit, EM_SETSEL, length, length);
+    SendMessageA(m_hResultEdit, EM_REPLACESEL, FALSE, (LPARAM)text.c_str());
+}
+
+void RegExpCalc::SetResult(const std::string& text)
+{
+    SetWindowTextA(m_hResultEdit, text.c_str());
+}
+
+// Subclass procedures
+LRESULT CALLBACK RegExpCalc::EditSubclassProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    RegExpCalc* pCalc = nullptr;
+    
+    if (message == WM_KEYDOWN && wParam == VK_RETURN)
+    {
+        pCalc = (RegExpCalc*)GetWindowLongPtr(GetParent(hWnd), GWLP_USERDATA);
+        if (pCalc)
+        {
+            pCalc->EvaluateExpression();
+            return 0;
+        }
+    }
+    
+    return CallWindowProc(pCalc ? pCalc->m_originalInputProc : nullptr, hWnd, message, wParam, lParam);
+}
+
+LRESULT CALLBACK RegExpCalc::ComboSubclassProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    RegExpCalc* pCalc = (RegExpCalc*)GetWindowLongPtr(GetParent(hWnd), GWLP_USERDATA);
+    
+    if (pCalc)
+    {
+        // Add to history when focus is lost
+        if (message == WM_KILLFOCUS)
+        {
+            int len = GetWindowTextLengthW(hWnd);
+            if (len > 0)
+            {
+                std::wstring wtext(len, L'\0');
+                GetWindowTextW(hWnd, &wtext[0], len + 1);
+                
+                // Convert to UTF-8
+                int utf8Len = WideCharToMultiByte(CP_UTF8, 0, wtext.c_str(), -1, nullptr, 0, nullptr, nullptr);
+                std::string currentText;
+                if (utf8Len > 0)
+                {
+                    currentText.resize(utf8Len - 1);
+                    WideCharToMultiByte(CP_UTF8, 0, wtext.c_str(), -1, &currentText[0], utf8Len, nullptr, nullptr);
+                }
+                
+                if (!currentText.empty())
+                {
+                    // Determine field index based on control ID
+                    int ctrlId = GetDlgCtrlID(hWnd);
+                    int fieldIndex = 0;
+                    
+                    switch (ctrlId)
+                    {
+                    case IDC_SOURCE_EDIT: fieldIndex = 0; break;
+                    case IDC_REGEXP_EDIT: fieldIndex = 1; break;
+                    case IDC_REPLACE_EDIT: fieldIndex = 2; break;
+                    case IDC_FORMAT_EDIT: fieldIndex = 0; break;
+                    case IDC_PARAMETERS_EDIT: fieldIndex = 1; break;
+                    case IDC_DATA_EDIT: fieldIndex = 1; break;
+                    }
+                    
+                    pCalc->AddToHistory(currentText, pCalc->GetCurrentMode(), fieldIndex);
+                }
+            }
+        }
+        
+        if (message == WM_KEYDOWN)
+        {
+            if (wParam == VK_DELETE)
+            {
+                int ctrlId = GetDlgCtrlID(hWnd);
+                pCalc->DeleteSelectedHistoryItem(hWnd, pCalc->GetCurrentMode(), ctrlId);
+                return 0;
+            }
+            else if (wParam == VK_RETURN)
+            {
+                // Get text from this specific combo
+                int len = GetWindowTextLengthW(hWnd);
+                if (len > 0)
+                {
+                    std::wstring wtext(len, L'\0');
+                    GetWindowTextW(hWnd, &wtext[0], len + 1);
+                    
+                    // Convert to UTF-8
+                    int utf8Len = WideCharToMultiByte(CP_UTF8, 0, wtext.c_str(), -1, nullptr, 0, nullptr, nullptr);
+                    std::string currentText;
+                    if (utf8Len > 0)
+                    {
+                        currentText.resize(utf8Len - 1);
+                        WideCharToMultiByte(CP_UTF8, 0, wtext.c_str(), -1, &currentText[0], utf8Len, nullptr, nullptr);
+                    }
+                    
+                    if (!currentText.empty())
+                    {
+                        // Determine field index based on control ID
+                        int ctrlId = GetDlgCtrlID(hWnd);
+                        int fieldIndex = 0;
+                        
+                        switch (ctrlId)
+                        {
+                        case IDC_SOURCE_EDIT: fieldIndex = 0; break;
+                        case IDC_REGEXP_EDIT: fieldIndex = 1; break;
+                        case IDC_REPLACE_EDIT: fieldIndex = 2; break;
+                        case IDC_FORMAT_EDIT: fieldIndex = 0; break;
+                        case IDC_PARAMETERS_EDIT: fieldIndex = 1; break;
+                        case IDC_DATA_EDIT: fieldIndex = 1; break;
+                        }
+                        
+                        pCalc->AddToHistory(currentText, pCalc->GetCurrentMode(), fieldIndex);
+                    }
+                }
+                
+                // Also trigger evaluation
+                pCalc->EvaluateExpression();
+            }
+        }
+    }
+    
+    return CallWindowProc(pCalc ? pCalc->m_originalComboProc : nullptr, hWnd, message, wParam, lParam);
+}
+
+// About dialog procedure
+INT_PTR CALLBACK RegExpCalc::About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    UNREFERENCED_PARAMETER(lParam);
+    switch (message)
+    {
+    case WM_INITDIALOG:
+        return (INT_PTR)TRUE;
+
+    case WM_COMMAND:
+        if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
+        {
+            EndDialog(hDlg, LOWORD(wParam));
+            return (INT_PTR)TRUE;
+        }
+        break;
+    }
+    return (INT_PTR)FALSE;
+}
+
+// RegExp evaluation function
+void RegExpCalc::EvaluateRegExp()
+{
+    if (!m_pRegExpEngine)
+    {
+        SetResult("Res:\n  &:");
+        return;
+    }
+    
+    std::string source = GetCurrentText(AppMode::REGEXP, 0);
+    std::string pattern = GetCurrentText(AppMode::REGEXP, 1);
+    std::string replacement = GetCurrentText(AppMode::REGEXP, 2);
+    
+    if (pattern.empty())
+    {
+        SetResult("Res:\n  &: " + source);
+        return;
+    }
+    
+    RegExpResult result = m_pRegExpEngine->Execute(source, pattern, replacement);
+    
+    std::stringstream output;
+    output << "Res:\n  &: " << result.result << "\n";
+    
+    // Выводим группы только если они есть
+    if (!result.groups.empty())
+    {
+        // Добавляем отступ для каждой строки групп
+        std::istringstream groupStream(result.groups);
+        std::string line;
+        while (std::getline(groupStream, line))
+        {
+            if (!line.empty())
+            {
+                output << " " << line << "\n";
+            }
+        }
+    }
+    
+    // Выводим ошибку если есть
+    if (!result.error.empty())
+    {
+        output << "Error: " << result.error << "\n";
+    }
+    
+    SetResult(output.str());
+}
+
+void RegExpCalc::EvaluatePrintf()
+{
+    std::string format = GetCurrentText(AppMode::PRINTF, 0);
+    std::string parameters = GetCurrentText(AppMode::PRINTF, 1);
+    
+    if (format.empty())
+    {
+        SetResult("Format string is empty");
+        return;
+    }
+    
+    char dst[BUFSIZE] = { '\0' };
+    char fmtBuf[BUFSIZE];
+    char paramBuf[BUFSIZE];
+    
+    strcpy_s(fmtBuf, BUFSIZE, format.c_str());
+    strcpy_s(paramBuf, BUFSIZE, parameters.c_str());
+    
+    sprtst(dst, fmtBuf, paramBuf);
+    
+    std::stringstream output;
+    output << "Format string: \"" << format << "\"\n";
+    output << "Data string: \"" << parameters << "\"\n\n";
+    output << "Printed string: " << dst;
+    
+    SetResult(output.str());
+}
+
+void RegExpCalc::EvaluateScanf()
+{
+    std::string format = GetCurrentText(AppMode::SCANF, 0);
+    std::string data = GetCurrentText(AppMode::SCANF, 1);
+    
+    if (format.empty())
+    {
+        SetResult("Format string is empty");
+        return;
+    }
+    
+    char dst[BUFSIZE] = { '\0' };
+    char fmtBuf[BUFSIZE];
+    char dataBuf[BUFSIZE];
+    
+    strcpy_s(fmtBuf, BUFSIZE, format.c_str());
+    strcpy_s(dataBuf, BUFSIZE, data.c_str());
+    
+    int n = ssctst(dst, fmtBuf, dataBuf);
+    
+    std::stringstream output;
+    output << "Format string: \"" << format << "\"\n";
+    output << "Data string: \"" << data << "\"\n\n";
+    output << "Scanned " << n << " fields: " << dst;
+    
+    SetResult(output.str());
+}
+                {
+                    fmt = tNone;
+                    percent = false;
+                    continue;
+                }
+                else
+                if ((c == 'f') || (c == 'e') || (c == 'E') || (c == 'g') || (c == 'G'))
+                {
+                    fmt = tFloat;
+                    if (cc == 'l') fmt = tDouble;
+                    else
+                    if (cc == 'L') fmt = tExt;
+                    break;
+                }
+                else
+                if ((c == 'd') || (c == 'i') || (c == 'u') ||
+                    (c == 'x') || (c == 'X') || (c == 'o'))
+                {
+                    fmt = tInt;
+                    if (cc == 'L') fmt = ti64;
+                    else
+                    if (cc == 'l')  fmt = tLong;
+                    else
+                    if (cc == 'h')  fmt = tShort;
+                    break;
+                }
+                else
+                if ((c == 'D') || (c == 'I') || (c == 'U') || (c == 'O'))
+                {
+                    fmt = tLong;
+                    c = tolower(c);
+                    break;
+                }
+                else
+                if (c == 'c')
+                {
+                    fmt = tString;
+                    break;
+                }
+                else
+                if (c == 's')
+                {
+                    fmt = tString;
+                    break;
+                }
+                else
+                if (c == '[')
+                {
+                    open = true;
+                    continue;
+                }
+            }
+            else
+            if (c == '%')
+            {
+                percent = true;
+                continue;
+            }
+        } while (c);
+        
+        if (c && percent && fmt)
+        {
+            typelist[n] = fmt;
+            fmtlist[n] = c;
+            switch (fmt)
+            {
+            case tChar:
+                arglist[n] = (void*)malloc(sizeof(char));
+                *(char*)arglist[n] = '\0';
+                break;
+            case tShort:
+                arglist[n] = (void*)malloc(sizeof(short));
+                *(short*)arglist[n] = 0;
+                break;
+            case tInt:
+                arglist[n] = (void*)malloc(sizeof(int));
+                *(int*)arglist[n] = 0;
+                break;
+            case tLong:
+                arglist[n] = (void*)malloc(sizeof(long));
+                *(long*)arglist[n] = 0;
+                break;
+            case ti64:
+                arglist[n] = (void*)malloc(sizeof(__int64));
+                *(__int64*)arglist[n] = 0;
+                break;
+            case tFloat:
+                arglist[n] = (void*)malloc(sizeof(float));
+                *(float*)arglist[n] = 0.0;
+                break;
+            case tDouble:
+                arglist[n] = (void*)malloc(sizeof(double));
+                *(double*)arglist[n] = 0.0;
+                break;
+            case tExt:
+                arglist[n] = (void*)malloc(sizeof(long double));
+                *(long double*)arglist[n] = 0.0;
+                break;
+            case tString:
+                arglist[n] = (void*)malloc(sizeof(char*));
+                *(char**)arglist[n] = (char*)malloc(BUFSIZE);
+                memset(*(char**)arglist[n], 0, BUFSIZE);
+                break;
+            }
+            n++;
+        }
+    } while (c && (n < ARGSIZE));
+    
+    // Scan values from data string
+    int nn = 0;
+    int offset = 0;
+    for (int i = 0; i < n; ++i)
+    {
+        char fmtstr[16] = { 0 };
+        fmtstr[0] = '%';
+        int fmtlen = 1;
+        
+        // Add length modifiers if needed
+        switch (typelist[i])
+        {
+        case tShort: fmtstr[fmtlen++] = 'h'; break;
+        case tLong:  fmtstr[fmtlen++] = 'l'; break;
+        case ti64:   fmtstr[fmtlen++] = 'l'; fmtstr[fmtlen++] = 'l'; break;
+        case tDouble: fmtstr[fmtlen++] = 'l'; break;
+        case tExt:   fmtstr[fmtlen++] = 'L'; break;
+        }
+        fmtstr[fmtlen++] = fmtlist[i];
+        fmtstr[fmtlen] = '\0';
+        
+        char token[BUFSIZE] = { 0 };
+        int t = 0;
+        while (str[offset] == ' ' || str[offset] == ',') ++offset;
+        while (str[offset] && str[offset] != ',') token[t++] = str[offset++];
+        token[t] = '\0';
+        
+        switch (typelist[i])
+        {
+        case tChar:
+            if (sscanf_s(token, fmtstr, (char*)arglist[i], 1) == 1) ++nn;
+            break;
+        case tShort:
+            if (sscanf_s(token, fmtstr, (short*)arglist[i]) == 1) ++nn;
+            break;
+        case tInt:
+            if (sscanf_s(token, fmtstr, (int*)arglist[i]) == 1) ++nn;
+            break;
+        case tLong:
+            if (sscanf_s(token, fmtstr, (long*)arglist[i]) == 1) ++nn;
+            break;
+        case ti64:
+            if (sscanf_s(token, fmtstr, (__int64*)arglist[i]) == 1) ++nn;
+            break;
+        case tFloat:
+            if (sscanf_s(token, fmtstr, (float*)arglist[i]) == 1) ++nn;
+            break;
+        case tDouble:
+            if (sscanf_s(token, fmtstr, (double*)arglist[i]) == 1) ++nn;
+            break;
+        case tExt:
+            if (sscanf_s(token, fmtstr, (long double*)arglist[i]) == 1) ++nn;
+            break;
+        case tString:
+            if (sscanf_s(token, fmtstr, *(char**)arglist[i], BUFSIZE) == 1) ++nn;
+            break;
+        }
+    }
+    
+    // Format output
+    char* fdest = dst;
+    for (int i = 0; (i < n) && arglist[i]; i++)
+    {
+        switch (typelist[i])
+        {
+        case tChar:
+        {
+            char ci = *(char*)arglist[i];
+            char fmt[] = { "%c, \0" };
+            fdest += sprintf_s(fdest, BUFSIZE - (fdest - dst), fmt, ci);
+        }
+        break;
+        case tShort:
+        {
+            short si = *(short*)arglist[i];
+            char fmt[] = { "%hd, \0" };
+            fmt[2] = fmtlist[i];
+            fdest += sprintf_s(fdest, BUFSIZE - (fdest - dst), fmt, si);
+        }
+        break;
+        case tInt:
+        {
+            int ii = *(int*)arglist[i];
+            char fmt[] = { "%d, \0" };
+            fmt[1] = fmtlist[i];
+            fdest += sprintf_s(fdest, BUFSIZE - (fdest - dst), fmt, ii);
+        }
+        break;
+        case tLong:
+        {
+            long li = *(long*)arglist[i];
+            char fmt[] = { "%ld, \0" };
+            fmt[2] = fmtlist[i];
+            fdest += sprintf_s(fdest, BUFSIZE - (fdest - dst), fmt, li);
+        }
+        break;
+        case ti64:
+        {
+            __int64 Li = *(__int64*)arglist[i];
+            char fmt[] = { "%Ld, \0" };
+            fmt[2] = fmtlist[i];
+            fdest += sprintf_s(fdest, BUFSIZE - (fdest - dst), fmt, Li);
+        }
+        break;
+        case tFloat:
+        {
+            float ff = *(float*)arglist[i];
+            char fmt[] = { "%f, \0" };
+            fmt[1] = fmtlist[i];
+            fdest += sprintf_s(fdest, BUFSIZE - (fdest - dst), fmt, ff);
+        }
+        break;
+        case tDouble:
+        {
+            double df = *(double*)arglist[i];
+            char fmt[] = { "%lf, \0" };
+            fmt[2] = fmtlist[i];
+            fdest += sprintf_s(fdest, BUFSIZE - (fdest - dst), fmt, df);
+        }
+        break;
+        case tExt:
+        {
+            long double lf = *(long double*)arglist[i];
+            char fmt[] = { "%Lf, \0" };
+            fmt[2] = fmtlist[i];
+            fdest += sprintf_s(fdest, BUFSIZE - (fdest - dst), fmt, lf);
+        }
+        break;
+        case tString:
+        {
+            char* ss = *(char**)arglist[i];
+            char fmt[] = { "%s, \0" };
+            fdest += sprintf_s(fdest, BUFSIZE - (fdest - dst), fmt, ss);
+        }
+        break;
+        }
+    }
+    if (fdest > dst + 2) fdest[-2] = '\0';
+    
+    // Free allocated memory
+    for (int i = 0; (i < ARGSIZE) && arglist[i]; i++)
+    {
+        if (typelist[i] == tString)
+        {
+            char* s = *(char**)arglist[i];
+            free(s);
+        }
+        free(arglist[i]);
+    }
+    
+    std::stringstream output;
+    output << "Format string: \"" << format << "\"\n";
+    output << "Data string: \"" << data << "\"\n\n";
+    output << "Scanned " << nn << " fields: " << dst;
+    
+    SetResult(output.str());
+}
