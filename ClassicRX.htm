@@ -1,0 +1,266 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+   <title>Regular expressions</title>
+   <meta name="generator" content="Help &amp; Manual" />
+   <meta name="keywords" content="" />
+   <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
+   <meta http-equiv="Content-Style-Type" content="text/css" />
+   <link type="text/css" href="default.css" rel="stylesheet" />
+
+   <script type="text/javascript" src="jquery.js"></script>
+   <script type="text/javascript" src="helpman_settings.js"></script>
+   <script type="text/javascript" src="helpman_topicinit.js"></script>
+
+
+</head>
+<body style="margin: 0px 0px 0px 0px; background: #FFFFFF;">
+
+
+<table width="100%" border="0" cellspacing="0" cellpadding="5" bgcolor="#649CCC">
+  <tr valign="middle">
+    <td align="left">
+      <h1 class="p_Heading1"><span class="f_Heading1">Regular expressions</span></h1>
+
+    </td>
+    <td align="right">
+     <span style="font-size: 9pt">
+     <a href="introduction.htm">Top</a>&nbsp;
+     
+     <a href="escape_characters.htm">Next</a>
+     </span>
+    </td>
+  </tr>
+</table>
+
+
+<!-- Placeholder for topic body. -->
+<table width="100%" border="0" cellspacing="0" cellpadding="5"><tr valign="top"><td align="left">
+<p><span style="color: #000000;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-family: 'Times New Roman';">Regular expressions are characters that customize a search string. The product recognizes these regular expressions:</span></p>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 0px 0px;"><table cellspacing="0" cellpadding="0" border="2" style="border:solid 3px #808080; border-spacing:0px; border-collapse:collapse;">
+<tr style="text-align:left;vertical-align:middle;">
+<td colspan="2" style="vertical-align:middle; width:861px; padding:0px; border:solid 1px #808080;"><p><a name="search"></a><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold;">Search expression:</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold;">Characters</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="width:60px">&nbsp;</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">^</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">A circumflex at the start of the string matches the start of a line.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">$</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">A dollar sign at the end of the expression matches the end of a line.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">.</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">A period matches any character.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">*</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">An asterisk after a string matches any number of occurrences of that string followed by any characters, including zero characters. For example, </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">bo</span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic; font-weight: bold;">*</span><span style="font-size: 12pt; font-family: 'Times New Roman';"> matches </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">bot</span><span style="font-size: 12pt; font-family: 'Times New Roman';">, </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">bo</span><span style="font-size: 12pt; font-family: 'Times New Roman';"> and </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">boo</span><span style="font-size: 12pt; font-family: 'Times New Roman';"> but not </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">b</span><span style="font-size: 12pt; font-family: 'Times New Roman';">.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">+</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">A plus sign after a string matches any number of occurrences of that string followed by any characters except zero characters. For example, </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">bo</span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic; font-weight: bold;">+</span><span style="font-size: 12pt; font-family: 'Times New Roman';"> matches </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">boo</span><span style="font-size: 12pt; font-family: 'Times New Roman';">, and </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">booo</span><span style="font-size: 12pt; font-family: 'Times New Roman';">, but not </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">bo</span><span style="font-size: 12pt; font-family: 'Times New Roman';"> or </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">be</span><span style="font-size: 12pt; font-family: 'Times New Roman';">.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">?</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">A question mark makes the preceding item optional. Greedy, so the optional item is included in the match if possible. For example, </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">abc</span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic; font-weight: bold;">?</span><span style="font-size: 12pt; font-family: 'Times New Roman';"> matches </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">ab</span><span style="font-size: 12pt; font-family: 'Times New Roman';"> or </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">abc</span><span style="font-size: 12pt; font-family: 'Times New Roman';">.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">[ ]</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">Characters in brackets match any one character that appears in the brackets, but no others. For example </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic; font-weight: bold;">[</span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">bot</span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic; font-weight: bold;">]</span><span style="font-size: 12pt; font-family: 'Times New Roman';"> matches </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">b</span><span style="font-size: 12pt; font-family: 'Times New Roman';">, </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">o</span><span style="font-size: 12pt; font-family: 'Times New Roman';">, or </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">t</span><span style="font-size: 12pt; font-family: 'Times New Roman';">.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">[^]</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">A circumflex at the start of the string in brackets means NOT. Hence, </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic; font-weight: bold;">[^</span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">bot</span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic; font-weight: bold;">]</span><span style="font-size: 12pt; font-family: 'Times New Roman';"> matches any characters except </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">b</span><span style="font-size: 12pt; font-family: 'Times New Roman';">, </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">o</span><span style="font-size: 12pt; font-family: 'Times New Roman';">, or </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">t</span><span style="font-size: 12pt; font-family: 'Times New Roman';">.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">[-]</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">A hyphen within the brackets signifies a range of characters. For example, </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic; font-weight: bold;">[</span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">b</span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic; font-weight: bold;">-</span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">o</span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic; font-weight: bold;">]</span><span style="font-size: 12pt; font-family: 'Times New Roman';"> matches any character from </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">b</span><span style="font-size: 12pt; font-family: 'Times New Roman';"> through </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">o</span><span style="font-size: 12pt; font-family: 'Times New Roman';">. For example </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">[a-z,A-Z,!,$,%,_,#,0-9]+</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">( )</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">Braces group characters or expressions. Groups can be nested, with a maximum number of 16 groups in a single pattern. For the Replace operation, the groups are referred to by a backslash and a number according to the position in the “Text to find” expression, beginning with 0. For example, given the text to find and replacement strings, Find: </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic; font-weight: bold;">([</span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">0</span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic; font-weight: bold;">-</span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">9</span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic; font-weight: bold;">])([</span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">a</span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic; font-weight: bold;">-</span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">c</span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic; font-weight: bold;">]*)</span><span style="font-size: 12pt; font-family: 'Times New Roman';">, Replace: </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">NUM</span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic; font-weight: bold;">\1</span><span style="font-size: 12pt; font-family: 'Times New Roman';">, the string </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">3abcabc</span><span style="font-size: 12pt; font-family: 'Times New Roman';"> is changed to </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">NUMabcabc</span><span style="font-size: 12pt; font-family: 'Times New Roman';">.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">|</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">A vertical bar matches either expression on either side of the vertical bar. For example, </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">bar</span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic; font-weight: bold;">|</span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">car</span><span style="font-size: 12pt; font-family: 'Times New Roman';"> will match either </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">bar</span><span style="font-size: 12pt; font-family: 'Times New Roman';"> or </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">car</span><span style="font-size: 12pt; font-family: 'Times New Roman';">.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">\</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">A backslash before a wildcard character tells the Code editor to treat that character literally, not as a wildcard. For example, </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic; font-weight: bold;">\^</span><span style="font-size: 12pt; font-family: 'Times New Roman';"> matches </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic; font-weight: bold;">^</span><span style="font-size: 12pt; font-family: 'Times New Roman';"> and does not look for the start of a line.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">\esc</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">Escape characters.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p><span style="color: #000000;">&nbsp;</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="width:60px">&nbsp;</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td colspan="2" style="vertical-align:middle; width:861px; padding:0px; border:solid 1px #808080;"><p><a name="replace"></a><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold;">Replace expression:</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold;">Characters</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="width:60px">&nbsp;</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">\0..\9</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">Recalls </span><span style="font-size: 12pt; font-family: 'Times New Roman'; color: #010100;">stored substring from matched pattern </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold; color: #010100;">()</span><span style="font-size: 12pt; font-family: 'Times New Roman'; color: #010100;">'s.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">\A..\F</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">Recalls </span><span style="font-size: 12pt; font-family: 'Times New Roman'; color: #010100;">stored substring from matched pattern </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold; color: #010100;">()</span><span style="font-size: 12pt; font-family: 'Times New Roman'; color: #010100;">'s from 10 to 16.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">\esc</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">Escape characters.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">&amp;</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">Recalls </span><span style="font-size: 12pt; font-family: 'Times New Roman'; color: #010100;">entire matched pattern at replace.</span></p>
+</td>
+</tr>
+</table>
+</div>
+<p><span style="color: #000000;">&nbsp;</span></p>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 0px 0px;"><table cellspacing="0" cellpadding="0" border="1" style="border:solid 2px #000000; border-spacing:0px; border-collapse:collapse;">
+<tr style="text-align:left;vertical-align:top;">
+<td colspan="4" style="vertical-align:top; width:501px; padding:0px; border:solid 1px #000000;"><p style="text-align: center;"><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold;">Escape characters</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:top; width:97px; padding:0px; border:solid 1px #000000;"><p style="text-align: center;"><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold;">Sequence</span></p>
+</td>
+<td style="vertical-align:top; width:197px; padding:0px; border:solid 1px #000000;"><p><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold;">Description</span></p>
+</td>
+<td style="vertical-align:top; width:99px; padding:0px; border:solid 1px #000000;"><p style="text-align: center;"><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold;">DEC</span></p>
+</td>
+<td style="vertical-align:top; width:101px; padding:0px; border:solid 1px #000000;"><p style="text-align: center;"><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold;">HEX</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:top; width:97px; padding:0px; border:solid 1px #000000;"><p style="text-align: center;"><span style="font-size: 12pt; font-family: 'Courier New'; font-weight: bold;">\b</span></p>
+</td>
+<td style="vertical-align:top; width:197px; padding:0px; border:solid 1px #000000;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">Backspace </span></p>
+</td>
+<td style="vertical-align:top; width:99px; padding:0px; border:solid 1px #000000;"><p style="text-align: center;"><span style="font-size: 12pt; font-family: 'Times New Roman';">8</span></p>
+</td>
+<td style="vertical-align:top; width:101px; padding:0px; border:solid 1px #000000;"><p style="text-align: center;"><span style="font-size: 12pt; font-family: 'Times New Roman';">0x08</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:top; width:97px; padding:0px; border:solid 1px #000000;"><p style="text-align: center;"><span style="font-size: 12pt; font-family: 'Courier New'; font-weight: bold;">\t</span></p>
+</td>
+<td style="vertical-align:top; width:197px; padding:0px; border:solid 1px #000000;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">(Horizontal) Tab</span></p>
+</td>
+<td style="vertical-align:top; width:99px; padding:0px; border:solid 1px #000000;"><p style="text-align: center;"><span style="font-size: 12pt; font-family: 'Times New Roman';">9</span></p>
+</td>
+<td style="vertical-align:top; width:101px; padding:0px; border:solid 1px #000000;"><p style="text-align: center;"><span style="font-size: 12pt; font-family: 'Times New Roman';">0x09</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:top; width:97px; padding:0px; border:solid 1px #000000;"><p style="text-align: center;"><span style="font-size: 12pt; font-family: 'Courier New'; font-weight: bold;">\n</span></p>
+</td>
+<td style="vertical-align:top; width:197px; padding:0px; border:solid 1px #000000;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">New Line Feed (LF)</span></p>
+</td>
+<td style="vertical-align:top; width:99px; padding:0px; border:solid 1px #000000;"><p style="text-align: center;"><span style="font-size: 12pt; font-family: 'Times New Roman';">10</span></p>
+</td>
+<td style="vertical-align:top; width:101px; padding:0px; border:solid 1px #000000;"><p style="text-align: center;"><span style="font-size: 12pt; font-family: 'Times New Roman';">0x0a</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:top; width:97px; padding:0px; border:solid 1px #000000;"><p style="text-align: center;"><span style="font-size: 12pt; font-family: 'Courier New'; font-weight: bold;">\v</span></p>
+</td>
+<td style="vertical-align:top; width:197px; padding:0px; border:solid 1px #000000;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">Vertical Tab</span></p>
+</td>
+<td style="vertical-align:top; width:99px; padding:0px; border:solid 1px #000000;"><p style="text-align: center;"><span style="font-size: 12pt; font-family: 'Times New Roman';">11</span></p>
+</td>
+<td style="vertical-align:top; width:101px; padding:0px; border:solid 1px #000000;"><p style="text-align: center;"><span style="font-size: 12pt; font-family: 'Times New Roman';">0x0b</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:top; width:97px; padding:0px; border:solid 1px #000000;"><p style="text-align: center;"><span style="font-size: 12pt; font-family: 'Courier New'; font-weight: bold;">\f</span></p>
+</td>
+<td style="vertical-align:top; width:197px; padding:0px; border:solid 1px #000000;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">Form Feed</span></p>
+</td>
+<td style="vertical-align:top; width:99px; padding:0px; border:solid 1px #000000;"><p style="text-align: center;"><span style="font-size: 12pt; font-family: 'Times New Roman';">12</span></p>
+</td>
+<td style="vertical-align:top; width:101px; padding:0px; border:solid 1px #000000;"><p style="text-align: center;"><span style="font-size: 12pt; font-family: 'Times New Roman';">0x0c</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:top; width:97px; padding:0px; border:solid 1px #000000;"><p style="text-align: center;"><span style="font-size: 12pt; font-family: 'Courier New'; font-weight: bold;">\r</span></p>
+</td>
+<td style="vertical-align:top; width:197px; padding:0px; border:solid 1px #000000;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">Carriage Return (CR)</span></p>
+</td>
+<td style="vertical-align:top; width:99px; padding:0px; border:solid 1px #000000;"><p style="text-align: center;"><span style="font-size: 12pt; font-family: 'Times New Roman';">13</span></p>
+</td>
+<td style="vertical-align:top; width:101px; padding:0px; border:solid 1px #000000;"><p style="text-align: center;"><span style="font-size: 12pt; font-family: 'Times New Roman';">0x0d</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:top; width:97px; padding:0px; border:solid 1px #000000;"><p style="text-align: center;"><span style="font-size: 12pt; font-family: 'Courier New'; font-weight: bold;">\e</span></p>
+</td>
+<td style="vertical-align:top; width:197px; padding:0px; border:solid 1px #000000;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">Escape </span></p>
+</td>
+<td style="vertical-align:top; width:99px; padding:0px; border:solid 1px #000000;"><p style="text-align: center;"><span style="font-size: 12pt; font-family: 'Times New Roman';">27</span></p>
+</td>
+<td style="vertical-align:top; width:101px; padding:0px; border:solid 1px #000000;"><p style="text-align: center;"><span style="font-size: 12pt; font-family: 'Times New Roman';">0x1b</span></p>
+</td>
+</tr>
+</table>
+</div>
+<p>&nbsp;</p>
+<p><span style="font-weight: bold;"><a href="format_printf.htm" class="topiclink">printf format string</a></span></p>
+
+</td></tr></table>
+
+</body>
+</html>

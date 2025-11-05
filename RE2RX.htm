@@ -1,0 +1,154 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+   <title>RE2 (Google) RegExp</title>
+   <meta name="generator" content="Help &amp; Manual" />
+   <meta name="keywords" content="" />
+   <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
+   <meta http-equiv="Content-Style-Type" content="text/css" />
+   <link type="text/css" href="default.css" rel="stylesheet" />
+
+   <script type="text/javascript" src="jquery.js"></script>
+   <script type="text/javascript" src="helpman_settings.js"></script>
+   <script type="text/javascript" src="helpman_topicinit.js"></script>
+
+
+</head>
+<body style="margin: 0px 0px 0px 0px; background: #FFFFFF;">
+
+
+<table width="100%" border="0" cellspacing="0" cellpadding="5" bgcolor="#649CCC">
+  <tr valign="middle">
+    <td align="left">
+      <h1 class="p_Heading1"><span class="f_Heading1">RE2 (Google) RegExp</span></h1>
+
+    </td>
+    <td align="right">
+     <span style="font-size: 9pt">
+     <a href="introduction.htm">Top</a>&nbsp;
+     
+     <a href="classicrx.htm">Next</a>
+     </span>
+    </td>
+  </tr>
+</table>
+
+
+<!-- Placeholder for topic body. -->
+<table width="100%" border="0" cellspacing="0" cellpadding="5"><tr valign="top"><td align="left">
+<p><span style="color: #000000;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-family: 'Times New Roman';">RE2 is Google's regular expression library designed for guaranteed linear time execution. It protects against ReDoS (Regular Expression Denial of Service) attacks by limiting features.</span></p>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 0px 0px;"><table cellspacing="0" cellpadding="0" border="2" style="border:solid 3px #808080; border-spacing:0px; border-collapse:collapse;">
+<tr style="text-align:left;vertical-align:middle;">
+<td colspan="2" style="vertical-align:middle; width:861px; padding:0px; border:solid 1px #808080;"><p><a name="search"></a><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold;">Search expression (RE2 syntax):</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold;">Pattern</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold;">Description</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">.*? .+?</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">Non-greedy (lazy) quantifiers supported.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">\d \w \s</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">Character classes supported.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">(?:...)</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">Non-capturing group.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">{n,m}</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">Repetition quantifier.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p><span style="color: #000000;">&nbsp;</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="width:60px">&nbsp;</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td colspan="2" style="vertical-align:middle; width:861px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold; color: #FF0000;">NOT SUPPORTED (for linear time guarantee):</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">\1 \2</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">Backreferences (cannot be matched in linear time).</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">(?&lt;=...) (?&lt;!...)</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">Lookbehind assertions (not supported).</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p><span style="color: #000000;">&nbsp;</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="width:60px">&nbsp;</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td colspan="2" style="vertical-align:middle; width:861px; padding:0px; border:solid 1px #808080;"><p><a name="replace"></a><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold;">Replace expression (RE2 syntax):</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold;">Pattern</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold;">Description</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">\0</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">Entire matched pattern (full match).</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">\1..\9</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">Captured groups 1-9. Maximum 9 groups supported.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">\\</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">Literal backslash </span><span style="font-size: 12pt; font-family: 'Courier New'; font-weight: bold;">\</span><span style="font-size: 12pt; font-family: 'Times New Roman';">.</span></p>
+</td>
+</tr>
+</table>
+</div>
+<p><span style="color: #000000;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold;">Key advantages:</span></p>
+<p><span style="font-size: 12pt; font-family: 'Times New Roman';">- Guaranteed O(n) linear time complexity</span></p>
+<p><span style="font-size: 12pt; font-family: 'Times New Roman';">- Protection against ReDoS attacks</span></p>
+<p><span style="font-size: 12pt; font-family: 'Times New Roman';">- Fast and predictable performance</span></p>
+<p><span style="color: #000000;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold;">Key limitations:</span></p>
+<p><span style="font-size: 12pt; font-family: 'Times New Roman';">• No backreferences in patterns (</span><span style="font-size: 12pt; font-family: 'Courier New'; font-weight: bold;">\1</span><span style="font-size: 12pt; font-family: 'Times New Roman';">, </span><span style="font-size: 12pt; font-family: 'Courier New'; font-weight: bold;">\2</span><span style="font-size: 12pt; font-family: 'Times New Roman';">, etc.)</span></p>
+<p><span style="font-size: 12pt; font-family: 'Times New Roman';">• No lookbehind assertions</span></p>
+<p><span style="font-size: 12pt; font-family: 'Times New Roman';">• Backreferences work only in replacement strings</span></p>
+<p><span style="color: #000000;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold;">When to use RE2:</span></p>
+<p><span style="font-size: 12pt; font-family: 'Times New Roman';">Use RE2 when processing untrusted input or when predictable performance is critical. For complex patterns with backreferences, use Modern or Python engines.</span></p>
+<p><span style="color: #000000;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold;">Reference:</span></p>
+<p><a href="https://github.com/google/re2/wiki/Syntax" target="_blank">RE2 Syntax Documentation</a></p>
+
+</td></tr></table>
+
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+   <title>Python RegExp</title>
+   <meta name="generator" content="Help &amp; Manual" />
+   <meta name="keywords" content="" />
+   <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
+   <meta http-equiv="Content-Style-Type" content="text/css" />
+   <link type="text/css" href="default.css" rel="stylesheet" />
+
+   <script type="text/javascript" src="jquery.js"></script>
+   <script type="text/javascript" src="helpman_settings.js"></script>
+   <script type="text/javascript" src="helpman_topicinit.js"></script>
+
+
+</head>
+<body style="margin: 0px 0px 0px 0px; background: #FFFFFF;">
+
+
+<table width="100%" border="0" cellspacing="0" cellpadding="5" bgcolor="#649CCC">
+  <tr valign="middle">
+    <td align="left">
+      <h1 class="p_Heading1"><span class="f_Heading1">Python RegExp</span></h1>
+
+    </td>
+    <td align="right">
+     <span style="font-size: 9pt">
+     <a href="introduction.htm">Top</a>&nbsp;
+     
+     <a href="re2rx.htm">Next</a>
+     </span>
+    </td>
+  </tr>
+</table>
+
+
+<!-- Placeholder for topic body. -->
+<table width="100%" border="0" cellspacing="0" cellpadding="5"><tr valign="top"><td align="left">
+<p><span style="color: #000000;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-family: 'Times New Roman';">Python RegExp engine emulates Python's re module syntax. In this implementation, it uses std::regex internally, so it supports similar features to Modern engine but with Python-style replacement syntax.</span></p>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 0px 0px;"><table cellspacing="0" cellpadding="0" border="2" style="border:solid 3px #808080; border-spacing:0px; border-collapse:collapse;">
+<tr style="text-align:left;vertical-align:middle;">
+<td colspan="2" style="vertical-align:middle; width:861px; padding:0px; border:solid 1px #808080;"><p><a name="search"></a><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold;">Search expression (Python re syntax):</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold;">Pattern</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold;">Description</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">.*? .+?</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">Non-greedy (lazy) quantifiers - match as few characters as possible.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">(?P&lt;name&gt;...)</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">Named capture group (not supported in current implementation).</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">(?=...) (?!...)</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">Positive and negative lookahead (same as Modern).</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">\d \w \s</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">Character classes: digit, word character, whitespace (same as Modern).</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">\b</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">Word boundary.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">{n,m}</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">Repetition quantifier.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p><span style="color: #000000;">&nbsp;</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="width:60px">&nbsp;</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td colspan="2" style="vertical-align:middle; width:861px; padding:0px; border:solid 1px #808080;"><p><a name="replace"></a><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold;">Replace expression (Python re.sub syntax):</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold;">Pattern</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold;">Description</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">\0</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">Entire matched pattern (full match).</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">\1..\9</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">Captured groups 1-9. Maximum 9 groups supported.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">\\</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">Literal backslash </span><span style="font-size: 12pt; font-family: 'Courier New'; font-weight: bold;">\</span><span style="font-size: 12pt; font-family: 'Times New Roman';">.</span></p>
+</td>
+</tr>
+</table>
+</div>
+<p><span style="color: #000000;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold;">Key difference from Modern:</span></p>
+<p><span style="font-size: 12pt; font-family: 'Times New Roman';">Python uses </span><span style="font-size: 12pt; font-family: 'Courier New'; font-weight: bold;">\0</span><span style="font-size: 12pt; font-family: 'Times New Roman';">, </span><span style="font-size: 12pt; font-family: 'Courier New'; font-weight: bold;">\1</span><span style="font-size: 12pt; font-family: 'Times New Roman';">-</span><span style="font-size: 12pt; font-family: 'Courier New'; font-weight: bold;">\9</span><span style="font-size: 12pt; font-family: 'Times New Roman';"> for replacements, while Modern uses </span><span style="font-size: 12pt; font-family: 'Courier New'; font-weight: bold;">$&amp;</span><span style="font-size: 12pt; font-family: 'Times New Roman';">, </span><span style="font-size: 12pt; font-family: 'Courier New'; font-weight: bold;">$0</span><span style="font-size: 12pt; font-family: 'Times New Roman';">-</span><span style="font-size: 12pt; font-family: 'Courier New'; font-weight: bold;">$9</span><span style="font-size: 12pt; font-family: 'Times New Roman';">.</span></p>
+<p><span style="color: #000000;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold;">Note:</span></p>
+<p><span style="font-size: 12pt; font-family: 'Times New Roman';">This implementation converts Python replacement syntax to ECMAScript internally.</span></p>
+<p><span style="color: #000000;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold;">Reference:</span></p>
+<p><a href="https://docs.python.org/3/library/re.html" target="_blank">Python re module documentation</a></p>
+
+</td></tr></table>
+
+</body>
+</html>

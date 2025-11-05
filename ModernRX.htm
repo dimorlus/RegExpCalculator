@@ -1,0 +1,158 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+   <title>Modern RegExp (ECMAScript)</title>
+   <meta name="generator" content="Help &amp; Manual" />
+   <meta name="keywords" content="" />
+   <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
+   <meta http-equiv="Content-Style-Type" content="text/css" />
+   <link type="text/css" href="default.css" rel="stylesheet" />
+
+   <script type="text/javascript" src="jquery.js"></script>
+   <script type="text/javascript" src="helpman_settings.js"></script>
+   <script type="text/javascript" src="helpman_topicinit.js"></script>
+
+
+</head>
+<body style="margin: 0px 0px 0px 0px; background: #FFFFFF;">
+
+
+<table width="100%" border="0" cellspacing="0" cellpadding="5" bgcolor="#649CCC">
+  <tr valign="middle">
+    <td align="left">
+      <h1 class="p_Heading1"><span class="f_Heading1">Modern RegExp (ECMAScript)</span></h1>
+
+    </td>
+    <td align="right">
+     <span style="font-size: 9pt">
+     <a href="introduction.htm">Top</a>&nbsp;
+     
+     <a href="pythonrx.htm">Next</a>
+     </span>
+    </td>
+  </tr>
+</table>
+
+
+<!-- Placeholder for topic body. -->
+<table width="100%" border="0" cellspacing="0" cellpadding="5"><tr valign="top"><td align="left">
+<p><span style="color: #000000;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-family: 'Times New Roman';">Modern RegExp engine uses C++ std::regex with ECMAScript syntax (JavaScript-compatible). Supports lazy quantifiers and lookahead/lookbehind assertions.</span></p>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 0px 0px;"><table cellspacing="0" cellpadding="0" border="2" style="border:solid 3px #808080; border-spacing:0px; border-collapse:collapse;">
+<tr style="text-align:left;vertical-align:middle;">
+<td colspan="2" style="vertical-align:middle; width:861px; padding:0px; border:solid 1px #808080;"><p><a name="search"></a><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold;">Search expression (ECMAScript standard):</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold;">Pattern</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold;">Description</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">.+?</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">Lazy quantifier - matches as few characters as possible. For example, </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">&lt;.+?&gt;</span><span style="font-size: 12pt; font-family: 'Times New Roman';"> in </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">&lt;a&gt;&lt;b&gt;</span><span style="font-size: 12pt; font-family: 'Times New Roman';"> matches </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">&lt;a&gt;</span><span style="font-size: 12pt; font-family: 'Times New Roman';"> (not </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">&lt;a&gt;&lt;b&gt;</span><span style="font-size: 12pt; font-family: 'Times New Roman';">).</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">*? ?? {n,m}?</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">All quantifiers can be made lazy by adding </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold;">?</span><span style="font-size: 12pt; font-family: 'Times New Roman';"> after them.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">(?=...)</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">Positive lookahead - matches if pattern inside is ahead. For example, </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">q(?=u)</span><span style="font-size: 12pt; font-family: 'Times New Roman';"> matches </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">q</span><span style="font-size: 12pt; font-family: 'Times New Roman';"> only if followed by </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">u</span><span style="font-size: 12pt; font-family: 'Times New Roman';">.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">(?!...)</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">Negative lookahead - matches if pattern inside is NOT ahead.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">\d \w \s</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">Character classes: </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold;">\d</span><span style="font-size: 12pt; font-family: 'Times New Roman';"> = digit [0-9], </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold;">\w</span><span style="font-size: 12pt; font-family: 'Times New Roman';"> = word character [A-Za-z0-9_], </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold;">\s</span><span style="font-size: 12pt; font-family: 'Times New Roman';"> = whitespace.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">\D \W \S</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">Negated character classes (uppercase = opposite of lowercase).</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">\b \B</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">Word boundaries: </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold;">\b</span><span style="font-size: 12pt; font-family: 'Times New Roman';"> = word boundary, </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold;">\B</span><span style="font-size: 12pt; font-family: 'Times New Roman';"> = not word boundary.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">{n,m}</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">Matches between n and m repetitions. For example, </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">a{2,4}</span><span style="font-size: 12pt; font-family: 'Times New Roman';"> matches </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">aa</span><span style="font-size: 12pt; font-family: 'Times New Roman';">, </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">aaa</span><span style="font-size: 12pt; font-family: 'Times New Roman';">, </span><span style="font-size: 12pt; font-family: 'Times New Roman'; font-style: italic;">aaaa</span><span style="font-size: 12pt; font-family: 'Times New Roman';">.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p><span style="color: #000000;">&nbsp;</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="width:60px">&nbsp;</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td colspan="2" style="vertical-align:middle; width:861px; padding:0px; border:solid 1px #808080;"><p><a name="replace"></a><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold;">Replace expression (ECMAScript standard):</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold;">Pattern</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold;">Description</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">$&amp;</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">Entire matched pattern (full match).</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">$0..$9</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">Captured groups (0 = full match, 1-9 = groups). Maximum 9 groups supported.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">$$</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">Literal dollar sign </span><span style="font-size: 12pt; font-family: 'Courier New'; font-weight: bold;">$</span><span style="font-size: 12pt; font-family: 'Times New Roman';">.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">$`</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">Text before the match.</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:middle;">
+<td style="vertical-align:middle; width:112px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-size: 14pt; font-family: 'Courier New'; font-weight: bold;">$'</span></p>
+</td>
+<td style="vertical-align:middle; width:746px; padding:0px; border:solid 1px #808080;"><p><span style="font-size: 12pt; font-family: 'Times New Roman';">Text after the match.</span></p>
+</td>
+</tr>
+</table>
+</div>
+<p><span style="color: #000000;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold;">Common patterns supported by all engines (see Classic for full list):</span></p>
+<p><span style="font-size: 12pt; font-family: 'Times New Roman';">^ $ . * + ? [ ] ( ) | \</span></p>
+<p><span style="color: #000000;">&nbsp;</span></p>
+<p><span style="font-size: 12pt; font-family: 'Times New Roman'; font-weight: bold;">Reference:</span></p>
+<p><a href="https://en.cppreference.com/w/cpp/regex/ecmascript" target="_blank">C++ ECMAScript Regex Syntax</a></p>
+
+</td></tr></table>
+
+</body>
+</html>

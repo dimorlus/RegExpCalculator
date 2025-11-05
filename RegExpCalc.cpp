@@ -7,6 +7,8 @@
 #include "RegExpCalc.h"
 #include "Resource.h"
 #include "RegExpEngine.h"
+#include <htmlhelp.h>
+#include "help.h"
 
 #define BUFSIZE         4096
 #define ARGSIZE         128
@@ -964,6 +966,9 @@ void RegExpCalc::OnCommand(WPARAM wParam)
     case IDM_ABOUT:
         DialogBox(m_hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), m_hWnd, About);
         break;
+    case IDM_HELP_CONTENTS:
+        ShowContextHelp();
+        break;
     case IDM_CTRL_HOME:
         OnCtrlHome();
         break;
@@ -1001,6 +1006,9 @@ void RegExpCalc::OnKeyDown(WPARAM key)
 {
     switch (key)
     {
+    case VK_F1:
+        ShowContextHelp();
+        break;
     case VK_HOME:
         if (GetKeyState(VK_CONTROL) & 0x8000)
         {
@@ -1953,6 +1961,57 @@ void RegExpCalc::ShowHelp()
     // TODO: Show help file
 }
 
+void RegExpCalc::ShowContextHelp()
+{
+    // Determine help topic based on current mode and engine
+    UINT helpTopic = 0;
+    
+    if (m_currentMode == AppMode::REGEXP)
+    {
+        // RegExp mode - show help based on selected engine
+        switch (m_currentEngine)
+        {
+        case RegExpEngineType::CLASSIC:
+            helpTopic = ClassicRegularexpressions;
+            break;
+        case RegExpEngineType::MODERN:
+            helpTopic = Modern_RegExp_ECMAScript;
+            break;
+        case RegExpEngineType::PYTHON:
+            helpTopic = Python_RegExp;
+            break;
+        case RegExpEngineType::RE2:
+            helpTopic = RE2_Google_RegExp;
+            break;
+        }
+    }
+    else if (m_currentMode == AppMode::PRINTF)
+    {
+        helpTopic = Format_printf;
+    }
+    else if (m_currentMode == AppMode::SCANF)
+    {
+        helpTopic = Format_scanf;
+    }
+    
+    // Show help if topic is determined
+    if (helpTopic != 0)
+    {
+        wchar_t helpPath[MAX_PATH];
+        GetModuleFileNameW(NULL, helpPath, MAX_PATH);
+        
+        // Replace .exe with .chm
+        wchar_t* lastDot = wcsrchr(helpPath, L'.');
+        if (lastDot)
+        {
+            wcscpy_s(lastDot, 5, L".chm");
+        }
+        
+        // Call HtmlHelp with specific topic
+        HtmlHelpW(m_hWnd, helpPath, HH_HELP_CONTEXT, helpTopic);
+    }
+}
+
 void RegExpCalc::SetWindowOpacity(int opacity)
 {
     m_opacity = opacity;
@@ -2239,7 +2298,12 @@ LRESULT CALLBACK RegExpCalc::ComboSubclassProc(HWND hWnd, UINT message, WPARAM w
         
         if (message == WM_KEYDOWN)
         {
-            if (wParam == VK_DELETE)
+            if (wParam == VK_F1)
+            {
+                pCalc->ShowContextHelp();
+                return 0;
+            }
+            else if (wParam == VK_DELETE)
             {
                 int ctrlId = GetDlgCtrlID(hWnd);
                 pCalc->DeleteSelectedHistoryItem(hWnd, pCalc->GetCurrentMode(), ctrlId);

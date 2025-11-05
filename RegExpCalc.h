@@ -202,6 +202,7 @@ public:
 
     // Utility
     void ShowHelp();
+    void ShowContextHelp();
     void SetWindowOpacity(int opacity);
     void SetFontSize(int size);
     void SetAlwaysOnTop(bool alwaysOnTop);

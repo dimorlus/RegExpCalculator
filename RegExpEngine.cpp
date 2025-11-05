@@ -99,25 +99,22 @@ RegExpResult ModernRegExpEngine::Execute(const std::string& source, const std::s
             int remaining = sizeof(resultBuf);
             
             std::string fullMatch = match[0].str();
-            std::string prefix = match.prefix().str();
-            std::string suffix = match.suffix().str();
             
-            // Res: - замена с пользовательским replacement (используя ECMAScript format_default)
+            // Res: - замена только совпадения (используя ECMAScript format_default)
             // std::regex_replace использует $& для полного совпадения, $1-$9 для групп
             std::string replaced_match = std::regex_replace(fullMatch, regex, replacement);
-            std::string res_line = prefix + replaced_match + suffix;
-            int written = snprintf(presult, remaining, "% 4s %s\r\n", "Res:", res_line.c_str());
+            int written = snprintf(presult, remaining, "% 4s %s\r\n", "Res:", replaced_match.c_str());
             if (written > 0 && written < remaining) { presult += written; remaining -= written; }
             
             // $&: - полное совпадение (ECMAScript стандарт)
             written = snprintf(presult, remaining, "% 4s %s\r\n", "$&:", fullMatch.c_str());
             if (written > 0 && written < remaining) { presult += written; remaining -= written; }
             
-            // Группы $0-$F (ECMAScript стандарт: $0 = полное совпадение, $1-$9 = группы)
-            for (size_t i = 0; i <= 15; i++)
+            // Группы $0-$9 (ECMAScript стандарт: $0 = полное совпадение, $1-$9 = группы)
+            for (size_t i = 0; i <= 9; i++)
             {
                 char label[8];
-                snprintf(label, sizeof(label), "$%X:", (unsigned int)i);
+                snprintf(label, sizeof(label), "$%d:", (int)i);
                 std::string groupValue = (i < match.size() && match[i].matched) ? match[i].str() : "";
                 written = snprintf(presult, remaining, "% 4s %s\r\n", label, groupValue.c_str());
                 if (written > 0 && written < remaining) { presult += written; remaining -= written; }
@@ -165,28 +162,25 @@ RegExpResult PythonRegExpEngine::Execute(const std::string& source, const std::s
             int remaining = sizeof(resultBuf);
             
             std::string fullMatch = match[0].str();
-            std::string prefix = match.prefix().str();
-            std::string suffix = match.suffix().str();
             
-            // Res: - замена с пользовательским replacement
+            // Res: - замена только совпадения
             // Python использует \0 для полного совпадения, \1-\9 для групп
             // Но std::regex_replace использует ECMAScript формат ($&, $1-$9)
             // Поэтому конвертируем Python замену в ECMAScript формат
             std::string ecma_replacement = ConvertPythonReplacement(replacement);
             std::string replaced_match = std::regex_replace(fullMatch, regex, ecma_replacement);
-            std::string res_line = prefix + replaced_match + suffix;
-            int written = snprintf(presult, remaining, "% 4s %s\r\n", "Res:", res_line.c_str());
+            int written = snprintf(presult, remaining, "% 4s %s\r\n", "Res:", replaced_match.c_str());
             if (written > 0 && written < remaining) { presult += written; remaining -= written; }
             
             // \0: - полное совпадение (Python стандарт)
             written = snprintf(presult, remaining, "% 4s %s\r\n", "\\0:", fullMatch.c_str());
             if (written > 0 && written < remaining) { presult += written; remaining -= written; }
             
-            // Группы \1-\F (Python стандарт)
-            for (size_t i = 1; i <= 15; i++)
+            // Группы \1-\9 (Python стандарт)
+            for (size_t i = 1; i <= 9; i++)
             {
                 char label[8];
-                snprintf(label, sizeof(label), "\\%X:", (unsigned int)i);
+                snprintf(label, sizeof(label), "\\%d:", (int)i);
                 std::string groupValue = (i < match.size() && match[i].matched) ? match[i].str() : "";
                 written = snprintf(presult, remaining, "% 4s %s\r\n", label, groupValue.c_str());
                 if (written > 0 && written < remaining) { presult += written; remaining -= written; }
@@ -288,15 +282,22 @@ RegExpResult RE2Engine::Execute(const std::string& source, const std::string& pa
         {
             // Нет групп - только полное совпадение
             std::string fullMatch;
-            if (!RE2::PartialMatch(source, regex, &fullMatch))
+            re2::StringPiece input(source);
+            if (!RE2::FindAndConsume(&input, regex, &fullMatch))
             {
                 result.error = "No match found";
                 return result;
             }
             
-            // Выполняем замену
-            std::string replaced = source;
-            RE2::Replace(&replaced, regex, replacement);
+            // Для замены используем временную строку с источником
+            std::string temp = source;
+            std::string replaced = replacement;
+            // RE2 использует \0 или \& для полного совпадения
+            size_t pos = 0;
+            while ((pos = replaced.find("\\0", pos)) != std::string::npos) {
+                replaced.replace(pos, 2, fullMatch);
+                pos += fullMatch.length();
+            }
             
             char resultBuf[16384] = { '\0' };
             char* presult = resultBuf;
@@ -308,10 +309,10 @@ RegExpResult RE2Engine::Execute(const std::string& source, const std::string& pa
             written = snprintf(presult, remaining, "% 4s %s\r\n", "\\0:", fullMatch.c_str());
             if (written > 0 && written < remaining) { presult += written; remaining -= written; }
             
-            for (int i = 1; i <= 15; i++)
+            for (int i = 1; i <= 9; i++)
             {
                 char label[8];
-                snprintf(label, sizeof(label), "\\%X:", i);
+                snprintf(label, sizeof(label), "\\%d:", i);
                 written = snprintf(presult, remaining, "% 4s %s\r\n", label, "");
                 if (written > 0 && written < remaining) { presult += written; remaining -= written; }
             }
@@ -339,9 +340,25 @@ RegExpResult RE2Engine::Execute(const std::string& source, const std::string& pa
             std::string fullMatch;
             RE2::PartialMatch(source, regex, &fullMatch);
             
-            // Выполняем замену только первого совпадения
-            std::string replaced = source;
-            RE2::Replace(&replaced, regex, replacement);
+            // Выполняем замену вручную, подставляя группы
+            std::string replaced = replacement;
+            
+            // Заменяем \0 на полное совпадение
+            size_t pos = 0;
+            while ((pos = replaced.find("\\0", pos)) != std::string::npos) {
+                replaced.replace(pos, 2, fullMatch);
+                pos += fullMatch.length();
+            }
+            
+            // Заменяем \1-\9 на соответствующие группы
+            for (int i = 1; i <= 9 && i <= num_groups; i++) {
+                std::string pattern_str = "\\" + std::to_string(i);
+                pos = 0;
+                while ((pos = replaced.find(pattern_str, pos)) != std::string::npos) {
+                    replaced.replace(pos, pattern_str.length(), groups[i - 1]);
+                    pos += groups[i - 1].length();
+                }
+            }
             
             // Форматируем вывод в стиле rxcc
             char resultBuf[16384] = { '\0' };
@@ -356,11 +373,11 @@ RegExpResult RE2Engine::Execute(const std::string& source, const std::string& pa
             written = snprintf(presult, remaining, "% 4s %s\r\n", "\\0:", fullMatch.c_str());
             if (written > 0 && written < remaining) { presult += written; remaining -= written; }
             
-            // Группы \1-\F
-            for (int i = 1; i <= 15; i++)
+            // Группы \1-\9
+            for (int i = 1; i <= 9; i++)
             {
                 char label[8];
-                snprintf(label, sizeof(label), "\\%X:", i);
+                snprintf(label, sizeof(label), "\\%d:", i);
                 const char* value = (i - 1 < (int)groups.size()) ? groups[i - 1].c_str() : "";
                 written = snprintf(presult, remaining, "% 4s %s\r\n", label, value);
                 if (written > 0 && written < remaining) { presult += written; remaining -= written; }
