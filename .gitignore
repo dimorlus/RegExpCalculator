@@ -71,10 +71,12 @@ Reports/*
 *.pch
 .vs/
 rxsnr/
+Debug/
 x64/Debug/
 RegExpCalc/
 WinApiCalc/
 # Keep release executable
 !x64/Release/RegExpCalc.exe
+!Release/RegExpCalc.exe
 
 
