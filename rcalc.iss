@@ -54,6 +54,20 @@ Root: HKCU; Subkey: "Software\RegExpCalc\Settings"; ValueType: dword; ValueName:
 Root: HKCU; Subkey: "Software\RegExpCalc\Settings"; ValueType: dword; ValueName: "Opacity"; ValueData: "100"; Components: program; Flags: createvalueifdoesntexist
 Root: HKCU; Subkey: "Software\RegExpCalc\Settings"; ValueType: dword; ValueName: "AlwaysOnTop"; ValueData: "0"; Components: program; Flags: createvalueifdoesntexist
 
+Root: HKCU; Subkey: "Software\RegExpCalc\Settings"; ValueType: dword; ValueName: "WindowX"; ValueData: "100"; Components: program; Flags: createvalueifdoesntexist
+Root: HKCU; Subkey: "Software\RegExpCalc\Settings"; ValueType: dword; ValueName: "WindowY"; ValueData: "100"; Components: program; Flags: createvalueifdoesntexist
+Root: HKCU; Subkey: "Software\RegExpCalc\Settings"; ValueType: dword; ValueName: "RegExpWindowX"; ValueData: "100"; Components: program; Flags: createvalueifdoesntexist
+Root: HKCU; Subkey: "Software\RegExpCalc\Settings"; ValueType: dword; ValueName: "RegExpWindowY"; ValueData: "100"; Components: program; Flags: createvalueifdoesntexist
+Root: HKCU; Subkey: "Software\RegExpCalc\Settings"; ValueType: dword; ValueName: "RegExpWindowHeight"; ValueData: "400"; Components: program; Flags: createvalueifdoesntexist
+
+Root: HKCU; Subkey: "Software\RegExpCalc\Settings"; ValueType: dword; ValueName: "PrintfWindowX"; ValueData: "100"; Components: program; Flags: createvalueifdoesntexist
+Root: HKCU; Subkey: "Software\RegExpCalc\Settings"; ValueType: dword; ValueName: "PrintfWindowY"; ValueData: "100"; Components: program; Flags: createvalueifdoesntexist
+Root: HKCU; Subkey: "Software\RegExpCalc\Settings"; ValueType: dword; ValueName: "PrintfWindowHeight"; ValueData: "200"; Components: program; Flags: createvalueifdoesntexist
+
+Root: HKCU; Subkey: "Software\RegExpCalc\Settings"; ValueType: dword; ValueName: "ScanfWindowX"; ValueData: "100"; Components: program; Flags: createvalueifdoesntexist
+Root: HKCU; Subkey: "Software\RegExpCalc\Settings"; ValueType: dword; ValueName: "ScanfWindowY"; ValueData: "100"; Components: program; Flags: createvalueifdoesntexist
+Root: HKCU; Subkey: "Software\RegExpCalc\Settings"; ValueType: dword; ValueName: "ScanfWindowHeight"; ValueData: "200"; Components: program; Flags: createvalueifdoesntexist
+
 [UninstallDelete]
 Type: dirifempty; Name: "{app}"
 
